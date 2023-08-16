@@ -1,4 +1,6 @@
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 import time
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
@@ -8,41 +10,11 @@ import openpyxl
 from tkinter import Tk
 import argparse
 from selenium.webdriver.common.keys import Keys
-
-def scrap_from_url(args, driver,url=None, load_page=True):
-    if url == None:
-        url = 'https://www.linkedin.com/sales/search/people?doFetchHeroCard=false&functionIncluded=12&geoIncluded=103644278&industryIncluded=4&logHistory=true&page=1&rsLogId=967882860&searchSessionId=2KtadMyDTh6HsrXXvjHlIQ%3D%3D&seniorityIncluded=6%2C7%2C8'
-
-    if load_page:
-        driver.get(url)
-        time.sleep(3)
-#################################### INSERT URL ####################################
-
-    links = []
-    number_page = 1
-    number_candidate = 0
-    while number_page < 2:
-        time.sleep(3)
-        height = 0
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        while height < driver.execute_script("return document.body.scrollHeight"):
-            driver.execute_script("window.scrollTo(0, {});".format(height))
-            height += 20
-        names = driver.find_elements_by_tag_name("a")
-        for name in names:
-            link = name.get_attribute('href')
-            if 'https://www.linkedin.com/sales/people/' in link:
-                if link not in links:
-                    links.append(link)
-
-        number_page += 1
-        # next_button = driver.find_element_by_class_name("search-results__pagination-next-button")
-        # next_button.click()
-        # print(links)
-        # print(len(links))
-
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+    
+def scrap_from_csv(driver):
     extracted_infos = []
-    hiring_keys = ['hiring','hiring!','Hiring','Hiring!','HIRING','open','Open','position']
     count=0
     for link in links:
         count += 1
@@ -58,33 +30,20 @@ def scrap_from_url(args, driver,url=None, load_page=True):
         # get full name
         full_name = soup.title.text.split('|')[0]
 
-        # get position and company name
-        pos_and_company = soup.find(class_='profile-topcard__current-positions flex mt3').text.split()
-        index_at = pos_and_company.index('at')
-        position = ' '.join(pos_and_company[:index_at])
-        company = pos_and_company[index_at + 1]
-
-        # get connection size
-        try:
-            connection_size = soup.find(class_='profile-topcard__connections-data type-total inline t-14 t-black--light mr5').text.strip()
-        except:
-            connection_size = ''
-
-
         # company url
-        try:
-            url_root = 'https://www.linkedin.com'
-            company_url = soup.find(class_='profile-topcard__current-positions flex mt3').a.attrs['href']
-            company_url = url_root + company_url
-        except:
-            company_url = ''
+        companies = ','.join(
+            list(
+                map(
+                    driver.find_element(By.XPATH, './/ul[@class="_positions-list_q5pnp1"]/descendant::a[@class="ember-view _company-icon_p4eb22"]'),
+                    lambda a: a.get_attribute('href')
+            )))
 
         # linkedin profile url
         try:
-            trip = driver.find_element_by_css_selector(
-                "div[class='artdeco-dropdown artdeco-dropdown--placement-bottom artdeco-dropdown--justification-right ember-view']")
+            trip = driver.find_element(By.CSS_SELECTOR,
+                "button[class='ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n']")
             trip.click()
-            cop_button = driver.find_element_by_css_selector("div[data-control-name='copy_linkedin']")
+            cop_button = driver.find_element(By.CSS_SELECTOR,"div[data-control-name='copy_linkedin']")
             time.sleep(1)
             cop_button.click()
             time.sleep(1)
@@ -94,37 +53,17 @@ def scrap_from_url(args, driver,url=None, load_page=True):
 
         # profile description
         try:
-            see_more_button = driver.find_element_by_css_selector(
-                "button[class='button--unstyled link-without-visited-state inline-block font-size-inherit profile-topcard__summary-expand-link']")
-            see_more_button.click()
-            src = driver.page_source
-            soup = BeautifulSoup(src, 'html.parser')
-            profile_summary = soup.find(class_='profile-topcard__summary-modal-content').text.strip()
+            profile_summary = driver.find_element(By.XPATH, './/div[@class="_bodyText_1e5nen _default_1i6ulk"]').text.strip()
         except:
             profile_summary = ''
 
 
-        # get hiring needs
-        hiring_needs = 'NO'
-        split_profile = profile_summary.split()
-        for word in split_profile:
-            if word in hiring_keys:
-                hiring_needs = 'YES'
-        top_card = soup.find(class_='profile-topcard-content-container mr2').text.strip().split()
-        for word in top_card:
-            if word in hiring_keys:
-                hiring_needs = 'YES'
         ##---------------------------------------##
         number_candidate += 1
         print("{} /".format(number_candidate) + " {}".format(len(links)))
         person_profile['NAME'] = full_name
-        person_profile['POSITION'] = position
-        person_profile['CONNECTION SIZE'] = connection_size
-        person_profile['COMPANY'] = company
-        person_profile['HIRING NEEDS'] = hiring_needs
+        person_profile['COMPANIES'] = companies
         person_profile['LINKEDIN WEBPAGE'] = linkedin_url
-        person_profile['COMPANY WEBPAGE'] = company_url
-        person_profile['SALE NAVIGATOR URL'] = link
         person_profile['DESCRIPTION'] = profile_summary
         extracted_infos.append(person_profile)
         time.sleep(3)
@@ -144,7 +83,7 @@ def scrap_from_keywords(args, driver,keywords=None):
     driver.get(filter_page_url)
     time.sleep(3)
 
-    kwd_input = driver.find_element_by_id('ember44-input')
+    kwd_input = driver.find_element(By.ID,'ember44-input')
     kwd_input.send_keys(keywords)
     kwd_input.send_keys(Keys.ENTER)
     time.sleep(1)
@@ -172,42 +111,36 @@ def read_company_list(fpath):
 ####################################################################################
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--search_words', default=None)
-    parser.add_argument('--url', default=None)
-    parser.add_argument('--mode', default='url')
-    args = parser.parse_args()
 
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument("start-maximized")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
     driver.get('https://www.linkedin.com')
     driver.maximize_window()
+    time.sleep(10)
+    username = driver.find_element(By.ID,'session_key')
+    username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mail
 
-    username = driver.find_element_by_id('session_key')
-    username.send_keys('joycewxyyy@gmail.com')  # Insert your e-mail
+    password = driver.find_element(By.ID,'session_password')
+    password.send_keys('BinanceZalupa228')  # Insert your password here
 
-    password = driver.find_element_by_id('session_password')
-    password.send_keys('Internship2021@')  # Insert your password here
-
-    log_in_button = driver.find_element_by_class_name("sign-in-form__submit-button")
+    log_in_button = driver.find_element(By.CLASS_NAME,"sign-in-form__submit-btn--full-width")
     log_in_button.click()
     time.sleep(1)
     try:
-        confirm_button = driver.find_element_by_id('remember-me-prompt__form-secondary')
+        confirm_button = driver.find_element(By.ID,'remember-me-prompt__form-secondary')
         confirm_button.click()
     except:
         pass
+    
     time.sleep(1)
-
-    print(args)
-    if args.mode == 'url':
-        scrap_from_url(args, driver, args.url)
-    elif args.mode == 'keywords':
-        scrap_from_keywords(args, driver, keywords=args.search_words)
-    elif args.mode == 'hugeworks':
-        scrap_from_company_list(args, driver, fpath='./company.txt')
-    else:
-        print('MODE wrongly specified!!!')
-
+   
+    scrap_from_csv(driver)
 
 
 
