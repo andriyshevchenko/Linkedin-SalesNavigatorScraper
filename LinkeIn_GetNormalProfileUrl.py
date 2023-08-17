@@ -12,9 +12,11 @@ import concurrent.futures
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import numpy as np
 import pathlib 
+import random
 import os
+import argparse
 
-def scrap_from_csv(input_file, index: int):
+def scrap_from_csv(input_file, index: int, profiles: int):
     time.sleep(index)
     driver = constructDriver(True)
     print('scrap_from_csv')
@@ -33,19 +35,19 @@ def scrap_from_csv(input_file, index: int):
         print(f'type = {type(input_file)}')
         skip = file_length
         print(f'skipping {skip} items')
-        print(f'remaining number of lines: {len(input_file[file_length::])}')
+        print(f'remaining number of lines: {len(input_file[skip::max(file_length+profiles, len(input_file))])}')
         input()
-        for row in input_file[skip::]:
+        for row in input_file[skip::max(file_length+profiles, len(input_file))]:
             attempts = 0
             try:
                 attempts += 1
                 driver.get(row['ProfileUrl'])
                 ellipsis = WebDriverWait(driver=driver, timeout=10).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
-                )       
+                )     
 
+                time.sleep(random.uniform(1.0, 3.0))
                 ellipsis.click()
-                time.sleep(1)
 
                 WebDriverWait(driver=driver, timeout=10).until(
                     EC.presence_of_element_located((By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]'))
@@ -58,6 +60,7 @@ def scrap_from_csv(input_file, index: int):
                     WebDriverWait(driver=driver, timeout=10).until(
                         EC.element_to_be_clickable(copyButton)
                     )
+                    time.sleep(random.uniform(1.0, 3.0))
                     copyButton.click()
                     linkedin_url = Tk().clipboard_get().strip()
                     print(linkedin_url)
@@ -71,7 +74,7 @@ def scrap_from_csv(input_file, index: int):
                     raise error
                 else:
                     print(error)
-                    time.sleep(5)
+                    time.sleep(10)
 
         driver.quit()
 
@@ -106,13 +109,15 @@ def constructDriver(headless = False):
     log_in_button = WebDriverWait(driver=driver, timeout=10).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
     
-    time.sleep(1)
+    time.sleep(random.uniform(1.0, 3.0))
     log_in_button.click()
     
     return driver
 
 if __name__ == '__main__':
-    time.sleep(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--profiles', default=None)
+    args = parser.parse_args()
     number_jobs = 1
      
     with open('links.csv', newline='') as csvfile: 
