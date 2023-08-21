@@ -41,6 +41,7 @@ def scrap_from_csv(input_file, index: int, profiles: int):
             attempts = 0
             try:
                 attempts += 1
+                time.sleep(random.uniform(30, 60))
                 driver.get(row['ProfileUrl'])
                 ellipsis = WebDriverWait(driver=driver, timeout=10).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
