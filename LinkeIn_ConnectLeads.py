@@ -15,8 +15,9 @@ import pathlib
 import os
 from datetime import date
 import random
+import argparse
 
-def connect_from_csv(input_file, startDate: date, skipLeadsPerDayNumber: int):
+def connect_from_csv(input_file, startDate: date, skipLeadsPerDayNumber: int, production: bool):
     driver = constructDriver(True)
     print(f'number of rows = {len(input_file)}')
     skip = (date.today() - startDate).days * skipLeadsPerDayNumber
@@ -28,20 +29,40 @@ def connect_from_csv(input_file, startDate: date, skipLeadsPerDayNumber: int):
         try:
             attempts += 1
             driver.get(row['ProfileUrl'])
-            button_more = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
-            )           
-            button_more.click()
+            try:
+                connect_button = WebDriverWait(driver=driver, timeout=10).until(
+                    EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action"]'))
+                )
+            except:
+               pass
+            
+            if (connect_button is None):
+                try:
+                    connect_button = WebDriverWait(driver=driver, timeout=10).until(
+                        EC.presence_of_element_located((By.XPATH, './/div[@class="pvs-profile-actions__action"]/button'))
+                    )
+                except:
+                   pass
+
+            if (connect_button is None):
+                button_more = WebDriverWait(driver=driver, timeout=10).until(
+                    EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
+                )           
+                button_more.click()
+                time.sleep(random.uniform(1.0, 5.0))
+                WebDriverWait(driver=driver, timeout=10).until(
+                    EC.presence_of_element_located((By.XPATH, './/div[@class="class="pvs-overflow-actions-dropdown__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"]'))
+                )       
+                connect_button = WebDriverWait(driver=driver, timeout=10).until(
+                    EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
+                )  
+
             time.sleep(random.uniform(1.0, 5.0))
 
-            WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/div[@class="class="pvs-overflow-actions-dropdown__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"]'))
-            )       
-            connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
-            )  
-            time.sleep(random.uniform(1.0, 5.0))
-            full_name = driver.find_element(By.XPATH, './/div[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
+            if (production):
+                connect_button.click()
+
+            full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
             print(f'Connected {full_name}')
             time.sleep(random.uniform(1.0, 5.0))
         except Exception as error:
@@ -92,13 +113,17 @@ def constructDriver(headless = False):
     return driver
 
 if __name__ == '__main__':
-     
-    with open('Ukraine IT CEO 2023-08-19.csv', newline='') as csvfile: 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--production', default=False)
+
+    args = parser.parse_args()
+
+    with open('Ukraine IT CEO 2023-08-20.csv', newline='') as csvfile: 
         reader = list(csv.DictReader(csvfile))
 
         print(f'len(reader){len(reader)}')
 
-        connect_from_csv(reader, date(2023, 8, 19), 15)
+        connect_from_csv(reader, date(2023, 8, 19), 15, args.production)
 
 
 
