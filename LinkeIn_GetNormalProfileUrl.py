@@ -23,7 +23,7 @@ def scrap_from_csv(input_file, index: int, profiles: int):
     print(f'index = {index}')
     file_exists = os.path.exists(f'normalLinks{str(index+1)}.csv')
     file_length = 0
-    with open(f'normalLinks{str(index+1)}.csv',  newline='') as output_file:
+    with open(f'Ukraine IT CEO {str(index+1)}.csv',  newline='') as output_file:
         file_length = len(list(csv.DictReader(output_file)))
 
     with open(f'normalLinks{str(index+1)}.csv', 'a', encoding='utf8', newline='') as output_file:

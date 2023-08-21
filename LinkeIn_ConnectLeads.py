@@ -8,73 +8,52 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import concurrent.futures
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import numpy as np
 import math
 import pathlib 
 import os
+from datetime import date
+import random
 
-def connect_from_csv(input_file):
-    time.sleep(index)
+def connect_from_csv(input_file, startDate: date, skipLeadsPerDayNumber: int):
     driver = constructDriver(True)
-    print('scrap_from_csv')
-    print(f'index = {index}')
-    file_exists = os.path.exists(f'normalLinks{str(index+1)}.csv')
-    file_length = 0
-    with open(f'normalLinks{str(index+1)}.csv',  newline='') as output_file:
-        file_length = len(list(csv.DictReader(output_file)))
+    print(f'number of rows = {len(input_file)}')
+    skip = (date.today() - startDate).days * skipLeadsPerDayNumber
+    print(f'skipping {skip} items')
+    print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerDayNumber])}')
+    input()
+    for row in input_file[skip:skip+skipLeadsPerDayNumber]:
+        attempts = 0
+        try:
+            attempts += 1
+            driver.get(row['ProfileUrl'])
+            button_more = WebDriverWait(driver=driver, timeout=10).until(
+                EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
+            )           
+            button_more.click()
+            time.sleep(random.uniform(1.0, 5.0))
 
-    with open(f'normalLinks{str(index+1)}.csv', 'a', encoding='utf8', newline='') as output_file:
-        print('opened file')
-        writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl'])
-        if not file_exists:
-            writer.writeheader()
-        print(f'number of rows = {len(input_file)}')
-        print(f'type = {type(input_file)}')
-        skip = file_length
-        print(f'skipping {skip} items')
-        print(f'remaining number of lines: {len(input_file[file_length::])}')
-        input()
-        for row in input_file[skip::]:
-            attempts = 0
-            try:
-                attempts += 1
-                driver.get(row['ProfileUrl'])
-                ellipsis = WebDriverWait(driver=driver, timeout=10).until(
-                    EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
-                )       
-
-                ellipsis.click()
-                time.sleep(1)
-
-                WebDriverWait(driver=driver, timeout=10).until(
-                    EC.presence_of_element_located((By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]'))
-                )       
-                menuItems = driver.find_elements(By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]//descendant::li')
-                copyLinkedInUrl = list(filter(lambda item: item.find_element(By.XPATH, './/div[@class="_text_1xnv7i"]').text.strip() == 'Copy LinkedIn.com URL', menuItems))
-
-                if len(copyLinkedInUrl) == 1:
-                    copyButton = copyLinkedInUrl[0].find_element(By.XPATH, './/button[@class="ember-view _item_1xnv7i"]')
-                    WebDriverWait(driver=driver, timeout=10).until(
-                        EC.element_to_be_clickable(copyButton)
-                    )
-                    copyButton.click()
-                    linkedin_url = Tk().clipboard_get().strip()
-                    print(linkedin_url)
-                    writer.writerow({ 'ProfileUrl': linkedin_url })
-                    output_file.flush()
-            except Exception as error:
-                if attempts == 10:
-                    driver = constructDriver(True)
-                if attempts > 10:
-                    driver.quit()
-                    raise error
-                else:
-                    print(error)
-                    time.sleep(5)
-
-        driver.quit()
+            WebDriverWait(driver=driver, timeout=10).until(
+                EC.presence_of_element_located((By.XPATH, './/div[@class="class="pvs-overflow-actions-dropdown__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"]'))
+            )       
+            connect_button = WebDriverWait(driver=driver, timeout=10).until(
+                EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
+            )  
+            time.sleep(random.uniform(1.0, 5.0))
+            full_name = driver.find_element(By.XPATH, './/div[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
+            print(f'Connected {full_name}')
+            time.sleep(random.uniform(1.0, 5.0))
+        except Exception as error:
+            if attempts == 10:
+                driver = constructDriver(True)
+            if attempts > 10:
+                driver.quit()
+                raise error
+            else:
+                print(error)
+                time.sleep(10)   
+    driver.quit()
 
 def constructDriver(headless = False):
     options = Options()
@@ -107,21 +86,19 @@ def constructDriver(headless = False):
     log_in_button = WebDriverWait(driver=driver, timeout=10).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
     
-    time.sleep(1)
+    time.sleep(random.uniform(1.0, 5.0))
     log_in_button.click()
     
     return driver
 
-
-def connect_leads(event, context):
+if __name__ == '__main__':
      
-    with open('normalLinks.csv', newline='') as csvfile: 
+    with open('Ukraine IT CEO 2023-08-19.csv', newline='') as csvfile: 
         reader = list(csv.DictReader(csvfile))
 
-        print(f'type(reader){type(reader)}')
         print(f'len(reader){len(reader)}')
 
-        connect_from_csv(reader)
+        connect_from_csv(reader, date(2023, 8, 19), 15)
 
 
 
