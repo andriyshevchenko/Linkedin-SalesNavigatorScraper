@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import numpy as np
 import math
@@ -17,48 +18,29 @@ from datetime import date
 import random
 import argparse
 
-def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, production: bool):
+def withdraw_connections(production: bool):
     driver = constructDriver(True)
-    print(f'number of rows = {len(input_file)}')
-    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
-    print(f'skipping {skip} items')
-    print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
-
-    for row in input_file[skip:skip+skipLeadsPerWeekNumber]:
-        driver.get(row['ProfileUrl'])
-        try:
-            connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action"]'))
-            )
-        except:
-           pass
-        
-        if (connect_button is None):
-            try:
-                connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                    EC.presence_of_element_located((By.XPATH, './/div[@class="pvs-profile-actions__action"]/button'))
-                )
-            except:
-               pass
-        if (connect_button is None):
-            button_more = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
-            )           
-            button_more.click()
-            time.sleep(random.uniform(5.0, 10.0))
-            WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/div[@class="class="pvs-overflow-actions-dropdown__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"]'))
-            )       
-            connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
-            )  
-        time.sleep(random.uniform(5.0, 10.0))
+    driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
+    time.sleep(random.uniform(5.0, 10.0))
+    height: int = 0
+    while height < driver.execute_script("return document.body.scrollHeight"):
+        height += 20
+        driver.execute_script("window.scrollTo(0, {});".format(height))
+        time.sleep(0.0125)
+    time.sleep(random.uniform(5.0, 10.0))
+    buttons = driver.find_elements(By.XPATH, '(.//span[contains(.,"2 weeks")])/following::button[@class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view invitation-card__action-btn"][1]')
+    for button in buttons:
         if (production):
-            connect_button.click()
-        full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
-        print(f'Connected {full_name}')
-        time.sleep(random.uniform(5.0, 10.0))
-    driver.quit()
+            action = ActionChains(driver)
+            # perform the operation
+            action.move_to_element(button).click().perform()
+            time.sleep(random.uniform(2.0, 5.0))
+            submit_button = WebDriverWait(driver=driver, timeout=10).until(
+                EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-modal__confirm-dialog-btn artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]')))
+            submit_button.click()
+            time.sleep(random.uniform(2.0, 5.0))
+        else:
+            print('Skipping')
 
 def constructDriver(headless = False):
     options = Options()
@@ -111,12 +93,7 @@ def constructDriver(headless = False):
                 raise error
 
 if __name__ == '__main__':
-    with open('Ukraine IT CEO 2023-08-19.csv', newline='') as csvfile: 
-        reader = list(csv.DictReader(csvfile))
-
-        print(f'len(reader){len(reader)}')
-
-        connect_from_csv(reader, date(2023, 8, 28), 100, True)
+    withdraw_connections(True)
 
 
 
