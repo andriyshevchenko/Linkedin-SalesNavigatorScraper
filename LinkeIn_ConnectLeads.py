@@ -4,6 +4,8 @@ from selenium.webdriver.chrome.service import Service
 import time
 import csv
 from tkinter import Tk
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,41 +25,47 @@ def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, p
     skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
     print(f'skipping {skip} items')
     print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
-
     for row in input_file[skip:skip+skipLeadsPerWeekNumber]:
         driver.get(row['ProfileUrl'])
+        connect_button = None
         try:
+            # Connect
+            print('Connect')
             connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action"]'))
+                EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
             )
         except:
            pass
-        
+
         if (connect_button is None):
-            try:
-                connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                    EC.presence_of_element_located((By.XPATH, './/div[@class="pvs-profile-actions__action"]/button'))
-                )
-            except:
-               pass
-        if (connect_button is None):
+            # More -> Connect    
+            print('More -> Connect')
+            # Initialize ActionChains
+            actions = ActionChains(driver)
             button_more = WebDriverWait(driver=driver, timeout=10).until(
                 EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
             )           
-            button_more.click()
+            # Right-click or hover over the trigger element to reveal the context menu
+            actions.move_to_element(button_more).perform()
+            actions.click(button_more).perform()
             time.sleep(random.uniform(5.0, 10.0))
-            WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/div[@class="class="pvs-overflow-actions-dropdown__content artdeco-dropdown__content artdeco-dropdown--is-dropdown-element artdeco-dropdown__content--justification-left artdeco-dropdown__content--placement-bottom ember-view"]'))
-            )       
+            
             connect_button = WebDriverWait(driver=driver, timeout=10).until(
                 EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
-            )  
+            ) 
+
         time.sleep(random.uniform(5.0, 10.0))
-        if (production):
-            connect_button.click()
+        actions.move_to_element(connect_button)
+        actions.click(connect_button).perform()
+        submit_button = WebDriverWait(driver=driver, timeout=10).until(
+                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
+        )
+        time.sleep(random.uniform(5.0, 10.0))
+        submit_button.click()
         full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
         print(f'Connected {full_name}')
         time.sleep(random.uniform(5.0, 10.0))
+        
     driver.quit()
 
 def constructDriver(headless = False):
@@ -88,6 +96,8 @@ def constructDriver(headless = False):
             else:
                 driver.refresh()
 
+            driver.maximize_window()
+
             time.sleep(random.uniform(5.0, 10.0))
             
             username = WebDriverWait(driver=driver, timeout=10).until(
@@ -116,7 +126,7 @@ if __name__ == '__main__':
 
         print(f'len(reader){len(reader)}')
 
-        connect_from_csv(reader, date(2023, 8, 28), 100, True)
+        connect_from_csv(reader, date(2023, 8, 27), 100, True)
 
 
 

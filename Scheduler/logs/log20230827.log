@@ -1,0 +1,22 @@
+2023-08-27 10:18:48.881 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-27 10:18:48.976 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-27 10:18:48.977 +00:00 [INF] Quartz Scheduler created
+2023-08-27 10:18:48.997 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED shutting down.
+2023-08-27 10:18:49.020 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED paused.
+2023-08-27 10:18:49.032 +00:00 [WRN] Database connection Shutdown unsuccessful.
+System.ArgumentException: DataSource name cannot be null or empty (Parameter 'dsName')
+   at Quartz.Util.DBConnectionManager.GetDbProvider(String dsName)
+   at Quartz.Util.DBConnectionManager.Shutdown(String dsName)
+   at Quartz.Impl.AdoJobStore.JobStoreSupport.Shutdown(CancellationToken cancellationToken)
+2023-08-27 10:18:49.081 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED Shutdown complete.
+2023-08-27 10:22:39.607 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-27 10:22:39.698 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-27 10:22:39.704 +00:00 [INF] Quartz Scheduler created
+2023-08-27 10:22:39.716 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED shutting down.
+2023-08-27 10:22:39.723 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED paused.
+2023-08-27 10:22:39.732 +00:00 [WRN] Database connection Shutdown unsuccessful.
+System.ArgumentException: DataSource name cannot be null or empty (Parameter 'dsName')
+   at Quartz.Util.DBConnectionManager.GetDbProvider(String dsName)
+   at Quartz.Util.DBConnectionManager.Shutdown(String dsName)
+   at Quartz.Impl.AdoJobStore.JobStoreSupport.Shutdown(CancellationToken cancellationToken)
+2023-08-27 10:22:39.758 +00:00 [INF] Scheduler Scheduler_$_NON_CLUSTERED Shutdown complete.

@@ -2,21 +2,14 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import time
-import csv
-from tkinter import Tk
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.core.driver_cache import DriverCacheManager
-import numpy as np
-import math
 import pathlib 
-import os
-from datetime import date
 import random
-import argparse
 
 def withdraw_connections(production: bool):
     driver = constructDriver(True)
