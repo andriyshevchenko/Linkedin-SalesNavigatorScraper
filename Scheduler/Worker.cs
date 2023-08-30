@@ -13,15 +13,21 @@ namespace Scheduler
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await scheduler.Start(stoppingToken);
-
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000, stoppingToken);
-            }
+                await scheduler.Start(stoppingToken);
 
-            await scheduler.Stop(stoppingToken);
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                }
+
+                await scheduler.Stop(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("Error: {ex}", ex);
+            }
         }
     }
 }

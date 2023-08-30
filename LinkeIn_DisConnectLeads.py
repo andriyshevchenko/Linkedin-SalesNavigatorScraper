@@ -10,8 +10,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import pathlib 
 import random
+import logging
+import os
 
-def withdraw_connections(production: bool):
+def withdraw_connections(logger, production: bool):
     driver = constructDriver(True)
     driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
     time.sleep(random.uniform(5.0, 10.0))
@@ -33,7 +35,7 @@ def withdraw_connections(production: bool):
             submit_button.click()
             time.sleep(random.uniform(2.0, 5.0))
         else:
-            print('Skipping')
+            logger.info('Skipping')
 
 def constructDriver(headless = False):
     options = Options()
@@ -86,7 +88,12 @@ def constructDriver(headless = False):
                 raise error
 
 if __name__ == '__main__':
-    withdraw_connections(True)
+    logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    file_handler = logging.FileHandler(os.path.join(os.path.normpath(os.getcwd()), 'app.log'))
+    logger.addHandler(file_handler)
+    withdraw_connections(logger, True)
 
 
 

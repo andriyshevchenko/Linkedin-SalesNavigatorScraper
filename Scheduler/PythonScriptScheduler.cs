@@ -1,19 +1,17 @@
 ﻿using Quartz;
 using Quartz.Spi;
-using Quartz.Util;
 
 public partial class PythonScriptScheduler
 {
     private IScheduler scheduler;
-    private readonly List<ScriptConfiguration> scriptConfigurations;
+    private readonly IConfiguration configuration;
     private readonly IJobFactory jobFactory;
     private readonly ISchedulerFactory schedulerFactory;
     private readonly ILogger<PythonScriptScheduler> logger;
 
     public PythonScriptScheduler(IConfiguration configuration, IJobFactory jobFactory, ISchedulerFactory schedulerFactory, ILogger<PythonScriptScheduler> logger)
     {
-        scriptConfigurations = configuration.GetSection("PythonScriptScheduler:Scripts")
-            .Get<List<ScriptConfiguration>>();
+        this.configuration = configuration;
         this.jobFactory = jobFactory;
         this.schedulerFactory = schedulerFactory;
         this.logger = logger;
@@ -21,50 +19,62 @@ public partial class PythonScriptScheduler
 
     public async Task Start(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Starting scheduler");
-        logger.LogInformation("Waiting 5 minutes to ensure all services are available");
-        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-        try
+        var scriptConfigs = configuration.GetSection("PythonScriptScheduler:Scripts")
+                                        ?.Get<List<ScriptConfiguration>>() ?? new List<ScriptConfiguration>();
+        if (!scriptConfigs.Any())
         {
-            scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+            logger.LogInformation("No scripts detected.");
         }
-        catch (Exception e)
-        {
 
-            throw;
-        }
+        scheduler = await schedulerFactory.GetScheduler(cancellationToken);
         scheduler.JobFactory = jobFactory;
+        logger.LogInformation("Starting scheduler");
         await scheduler.Start(cancellationToken);
 
-        foreach (var scriptConfig in scriptConfigurations)
+        if (configuration.GetValue<bool>("PythonScriptScheduler:ClearDbOnStartup"))
+        {
+            await scheduler.Clear(cancellationToken);
+            logger.LogInformation("Deleted all scheduled jobs");
+        }
+
+        foreach (var scriptConfig in scriptConfigs)
         {
             if (string.IsNullOrWhiteSpace(scriptConfig.ScriptPath))
             {
                 throw new InvalidOperationException("Script path is empty.");
             }
 
-            var jobData = new JobDataMap
-            {
-                { "ScriptPath", scriptConfig.ScriptPath }
-            };
-
+            string jobName = $"PythonScriptJob_{scriptConfig.ScriptPath}_{scriptConfig.CronExpression}";
+            var jobKey = new JobKey(jobName, "PythonScripts");
+            var jobDetail = await scheduler.GetJobDetail(jobKey, cancellationToken);
             var job = JobBuilder.Create<PythonScriptJob>()
-                .WithIdentity($"PythonScriptJob_{scriptConfig.ScriptPath}", "PythonScripts")
-                .StoreDurably(true)
-                .UsingJobData(jobData)
+                .UsingJobData(
+                    new JobDataMap
+                    {
+                        { "ScriptPath", scriptConfig.ScriptPath }
+                    })
+                .WithIdentity(jobKey)
                 .Build();
 
+            var triggerName = $"PythonScriptTrigger_{scriptConfig.ScriptPath}_{scriptConfig.CronExpression}";
             var trigger = TriggerBuilder.Create()
-                .WithIdentity($"PythonScriptTrigger_{scriptConfig.ScriptPath}", "PythonScripts")
+                .WithIdentity(triggerName, "PythonScripts")
                 .WithCronSchedule(scriptConfig.CronExpression, x => x.WithMisfireHandlingInstructionFireAndProceed())
                 .Build();
 
+            if (jobDetail != null)
+            {
+                logger.LogInformation("Updating job {job}", trigger.Key);
+                await scheduler.UnscheduleJob(trigger.Key, cancellationToken);
+            }
+
             await scheduler.ScheduleJob(job, trigger, cancellationToken);
+            logger.LogInformation("Done updating job {job}", trigger.Key);
         }
     }
 
     public async Task Stop(CancellationToken cancellationToken)
     {
         await scheduler.Shutdown(cancellationToken);
-    }   
+    }
 }

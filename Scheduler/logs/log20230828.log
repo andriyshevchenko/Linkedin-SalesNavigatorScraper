@@ -1,0 +1,70 @@
+2023-08-28 10:15:29.196 +00:00 [INF] Default Quartz.NET properties loaded from embedded resource file
+2023-08-28 10:15:29.285 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:15:29.292 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:15:29.293 +00:00 [INF] RAMJobStore initialized.
+2023-08-28 10:15:29.294 +00:00 [INF] Quartz Scheduler 3.7.0.0 - 'DefaultQuartzScheduler' with instanceId 'NON_CLUSTERED' initialized
+2023-08-28 10:15:29.295 +00:00 [INF] Using thread pool 'Quartz.Simpl.DefaultThreadPool', size: 10
+2023-08-28 10:15:29.295 +00:00 [INF] Using job store 'Quartz.Simpl.RAMJobStore', supports persistence: False, clustered: False
+2023-08-28 10:15:29.297 +00:00 [INF] JobFactory set to: PythonScriptSchedulerService.SingletonJobFactory
+2023-08-28 10:15:29.306 +00:00 [INF] Scheduler DefaultQuartzScheduler_$_NON_CLUSTERED started.
+2023-08-28 10:20:23.206 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:20:23.248 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:20:23.286 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:20:23.291 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:20:23.300 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:20:40.602 +00:00 [INF] ConnectionAndTransactionHolder passed to RollbackConnection was null, ignoring
+2023-08-28 10:20:40.610 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 shutting down.
+2023-08-28 10:20:40.618 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 paused.
+2023-08-28 10:20:40.630 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 Shutdown complete.
+2023-08-28 10:24:45.019 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:24:45.061 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:24:45.098 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:24:45.102 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:24:45.112 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:25:02.315 +00:00 [INF] ConnectionAndTransactionHolder passed to RollbackConnection was null, ignoring
+2023-08-28 10:25:02.323 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 shutting down.
+2023-08-28 10:25:02.328 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 paused.
+2023-08-28 10:25:02.338 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 Shutdown complete.
+2023-08-28 10:26:48.092 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:26:48.138 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:26:48.175 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:26:48.175 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:26:48.192 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:27:05.434 +00:00 [INF] ConnectionAndTransactionHolder passed to RollbackConnection was null, ignoring
+2023-08-28 10:27:05.441 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 shutting down.
+2023-08-28 10:27:05.446 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 paused.
+2023-08-28 10:27:05.456 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 Shutdown complete.
+2023-08-28 10:29:32.952 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:29:32.995 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:29:33.030 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:29:33.032 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:29:33.044 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:29:33.280 +00:00 [INF] ConnectionAndTransactionHolder passed to RollbackConnection was null, ignoring
+2023-08-28 10:29:33.287 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 shutting down.
+2023-08-28 10:29:33.293 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 paused.
+2023-08-28 10:29:33.303 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 Shutdown complete.
+2023-08-28 10:30:26.688 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:30:26.732 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:30:26.767 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:30:26.768 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:30:26.780 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:30:27.078 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 shutting down.
+2023-08-28 10:30:27.085 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 paused.
+2023-08-28 10:30:27.095 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 Shutdown complete.
+2023-08-28 10:42:24.372 +00:00 [INF] Registering datasource 'default' with db provider: 'Quartz.Impl.AdoJobStore.Common.DbProvider'
+2023-08-28 10:42:24.420 +00:00 [INF] Using object serializer: Quartz.Simpl.JsonObjectSerializer, Quartz.Serialization.Json
+2023-08-28 10:42:24.459 +00:00 [INF] Initialized Scheduler Signaller of type: Quartz.Core.SchedulerSignalerImpl
+2023-08-28 10:42:24.460 +00:00 [INF] Quartz Scheduler created
+2023-08-28 10:42:24.475 +00:00 [INF] Using thread monitor-based data access locking (synchronization).
+2023-08-28 10:42:24.796 +00:00 [INF] Successfully validated presence of 10 schema objects
+2023-08-28 10:42:24.799 +00:00 [INF] JobStoreTX initialized.
+2023-08-28 10:42:24.801 +00:00 [INF] Quartz Scheduler 3.7.0.0 - 'Scheduler' with instanceId 'Scheduler_1' initialized
+2023-08-28 10:42:24.801 +00:00 [INF] Using thread pool 'Quartz.Simpl.DefaultThreadPool', size: 10
+2023-08-28 10:42:24.802 +00:00 [INF] Using job store 'Quartz.Impl.AdoJobStore.JobStoreTX', supports persistence: True, clustered: False
+2023-08-28 10:42:24.803 +00:00 [INF] JobFactory set to: PythonScriptSchedulerService.SingletonJobFactory
+2023-08-28 10:42:24.900 +00:00 [INF] Freed 0 triggers from 'acquired' / 'blocked' state.
+2023-08-28 10:42:24.921 +00:00 [INF] Recovering 0 jobs that were in-progress at the time of the last shut-down.
+2023-08-28 10:42:24.922 +00:00 [INF] Recovery complete.
+2023-08-28 10:42:24.929 +00:00 [INF] Removed 0 'complete' triggers.
+2023-08-28 10:42:24.932 +00:00 [INF] Removed 0 stale fired job entries.
+2023-08-28 10:42:24.945 +00:00 [INF] Scheduler Scheduler_$_Scheduler_1 started.
