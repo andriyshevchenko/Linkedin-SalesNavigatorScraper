@@ -15,39 +15,29 @@ import pathlib
 import random
 import os
 import argparse
+from datetime import date
 
-def scrap_from_csv(input_file, index: int, profiles: int):
-    time.sleep(index)
+def scrap_from_csv(input_file, index: int):
     driver = constructDriver(True)
     print('scrap_from_csv')
     print(f'index = {index}')
-    file_exists = os.path.exists(f'normalLinks{str(index+1)}.csv')
-    file_length = 0
-    with open(f'Ukraine IT CEO {str(index+1)}.csv',  newline='') as output_file:
-        file_length = len(list(csv.DictReader(output_file)))
-
-    with open(f'normalLinks{str(index+1)}.csv', 'a', encoding='utf8', newline='') as output_file:
+    path = f'Ukraine IT CEO {date.today()}.csv'
+    with open(path, 'w', encoding='utf8', newline='') as output_file:
         print('opened file')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl'])
-        if not file_exists:
-            writer.writeheader()
+        writer.writeheader()
         print(f'number of rows = {len(input_file)}')
         print(f'type = {type(input_file)}')
-        skip = file_length
-        print(f'skipping {skip} items')
-        print(f'remaining number of lines: {len(input_file[skip::max(file_length+profiles, len(input_file))])}')
-        input()
-        for row in input_file[skip::max(file_length+profiles, len(input_file))]:
+        for row in input_file:
             attempts = 0
             try:
                 attempts += 1
-                time.sleep(random.uniform(30, 60))
                 driver.get(row['ProfileUrl'])
                 ellipsis = WebDriverWait(driver=driver, timeout=10).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
                 )     
 
-                time.sleep(random.uniform(1.0, 3.0))
+                time.sleep(random.uniform(5.0, 10.0))
                 ellipsis.click()
 
                 WebDriverWait(driver=driver, timeout=10).until(
@@ -61,12 +51,15 @@ def scrap_from_csv(input_file, index: int, profiles: int):
                     WebDriverWait(driver=driver, timeout=10).until(
                         EC.element_to_be_clickable(copyButton)
                     )
-                    time.sleep(random.uniform(1.0, 3.0))
+                    time.sleep(random.uniform(5.0, 10.0))
                     copyButton.click()
                     linkedin_url = Tk().clipboard_get().strip()
                     print(linkedin_url)
                     writer.writerow({ 'ProfileUrl': linkedin_url })
                     output_file.flush()
+                
+                print('Waiting...')
+                time.sleep(45)
             except Exception as error:
                 if attempts == 10:
                     driver = constructDriver(True)
@@ -75,7 +68,7 @@ def scrap_from_csv(input_file, index: int, profiles: int):
                     raise error
                 else:
                     print(error)
-                    time.sleep(10)
+                    time.sleep(random.uniform(5.0, 10.0))
 
         driver.quit()
 
@@ -110,7 +103,7 @@ def constructDriver(headless = False):
     log_in_button = WebDriverWait(driver=driver, timeout=10).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
     
-    time.sleep(random.uniform(1.0, 3.0))
+    time.sleep(random.uniform(5.0, 10.0))
     log_in_button.click()
     
     return driver
@@ -121,7 +114,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     number_jobs = 1
      
-    with open('links.csv', newline='') as csvfile: 
+    with open('links 2023-08-22.csv', newline='') as csvfile: 
         reader = list(csv.DictReader(csvfile))
         chunks = np.array_split(reader, number_jobs)
 
@@ -135,8 +128,7 @@ if __name__ == '__main__':
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for number in range(number_jobs):
                 futures.append(
-                   executor.submit(scrap_from_csv, chunks[number], number)
-                )
+                   executor.submit(scrap_from_csv, chunks[number], number))
 
         for future in concurrent.futures.as_completed(futures):
             print(future.result())
