@@ -19,14 +19,16 @@ from datetime import date
 import random
 import argparse
 
-def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, production: bool):
+def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int):
     driver = constructDriver(True)
     print(f'number of rows = {len(input_file)}')
-    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
+    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber + 83
     print(f'skipping {skip} items')
     print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
     for row in input_file[skip:skip+skipLeadsPerWeekNumber]:
         driver.get(row['ProfileUrl'])
+        print(driver.current_url)
+       
         connect_button = None
         try:
             # Connect
@@ -35,36 +37,44 @@ def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, p
                 EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
             )
         except:
-           pass
+            if ('404' in driver.current_url):
+                print('Page doesn\'t exist')
+                time.sleep(45)
+                continue
 
-        if (connect_button is None):
-            # More -> Connect    
-            print('More -> Connect')
-            # Initialize ActionChains
+        try:
             actions = ActionChains(driver)
-            button_more = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
-            )           
-            # Right-click or hover over the trigger element to reveal the context menu
-            actions.move_to_element(button_more).perform()
-            actions.click(button_more).perform()
-            time.sleep(random.uniform(5.0, 10.0))
-            
-            connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
-            ) 
+            if (connect_button is None):
+                # More -> Connect    
+                print('More -> Connect')
+                # Initialize ActionChains
+                button_more = WebDriverWait(driver=driver, timeout=60).until(
+                    EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
+                )           
+                # Right-click or hover over the trigger element to reveal the context menu
+                actions.move_to_element(button_more).perform()
+                actions.click(button_more).perform()
+                time.sleep(random.uniform(5.0, 10.0))
 
-        time.sleep(random.uniform(5.0, 10.0))
-        actions.move_to_element(connect_button)
-        actions.click(connect_button).perform()
-        submit_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
-        )
-        time.sleep(random.uniform(5.0, 10.0))
-        submit_button.click()
-        full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
-        print(f'Connected {full_name}')
-        time.sleep(random.uniform(5.0, 10.0))
+                connect_button = WebDriverWait(driver=driver, timeout=60).until(
+                    EC.presence_of_element_located((By.XPATH, '(.//div[@class="artdeco-dropdown__item artdeco-dropdown__item--is-dropdown ember-view full-width display-flex align-items-center"]/*[contains(text(), "Connect")]/..)[last()]'))
+                ) 
+
+            time.sleep(random.uniform(5.0, 10.0))
+            actions.move_to_element(connect_button)
+            actions.click(connect_button).perform()
+            submit_button = WebDriverWait(driver=driver, timeout=60).until(
+                    EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
+            )
+            time.sleep(random.uniform(5.0, 10.0))
+            submit_button.click()
+            full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
+            print(f'Connected {full_name}')
+        except Exception as error:
+            print(error)
+            pass
+        
+        time.sleep(45)
         
     driver.quit()
 
@@ -100,15 +110,15 @@ def constructDriver(headless = False):
 
             time.sleep(random.uniform(5.0, 10.0))
             
-            username = WebDriverWait(driver=driver, timeout=10).until(
+            username = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.ID,'username'))
             )
             username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mai
-            password = WebDriverWait(driver=driver, timeout=10).until(
+            password = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.ID,'password'))
             )
             password.send_keys('BinanceZalupa228')  # Insert your password her
-            log_in_button = WebDriverWait(driver=driver, timeout=10).until(
+            log_in_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
 
             time.sleep(random.uniform(5.0, 10.0))
@@ -126,7 +136,7 @@ if __name__ == '__main__':
 
         print(f'len(reader){len(reader)}')
 
-        connect_from_csv(reader, date(2023, 8, 27), 100, True)
+        connect_from_csv(reader, date(2023, 8, 29), 100)
 
 
 
