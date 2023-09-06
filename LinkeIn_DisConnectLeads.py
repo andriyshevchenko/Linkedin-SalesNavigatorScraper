@@ -13,15 +13,15 @@ import random
 import logging
 import os
 
-def withdraw_connections(logger, production: bool):
-    driver = constructDriver(True)
-    driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
-    time.sleep(random.uniform(5.0, 10.0))
+def perform_scroll_to_bottom(driver):
     height: int = 0
     while height < driver.execute_script("return document.body.scrollHeight"):
         height += 20
         driver.execute_script("window.scrollTo(0, {});".format(height))
         time.sleep(0.0125)
+
+def withdraw_connections(driver, logger, production: bool):
+    perform_scroll_to_bottom(driver)
     time.sleep(random.uniform(5.0, 10.0))
     buttons = driver.find_elements(By.XPATH, '(.//span[contains(.,"weeks")])/following::button[@class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view invitation-card__action-btn"][1]')
     for button in buttons:
@@ -30,7 +30,7 @@ def withdraw_connections(logger, production: bool):
             # perform the operation
             action.move_to_element(button).click().perform()
             time.sleep(random.uniform(2.0, 5.0))
-            submit_button = WebDriverWait(driver=driver, timeout=10).until(
+            submit_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-modal__confirm-dialog-btn artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]')))
             submit_button.click()
             time.sleep(random.uniform(2.0, 5.0))
@@ -67,15 +67,15 @@ def constructDriver(headless = False):
 
             time.sleep(random.uniform(5.0, 10.0))
             
-            username = WebDriverWait(driver=driver, timeout=10).until(
+            username = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.ID,'username'))
             )
             username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mai
-            password = WebDriverWait(driver=driver, timeout=10).until(
+            password = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.ID,'password'))
             )
             password.send_keys('BinanceZalupa228')  # Insert your password her
-            log_in_button = WebDriverWait(driver=driver, timeout=10).until(
+            log_in_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
 
             time.sleep(random.uniform(5.0, 10.0))
@@ -93,9 +93,20 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     file_handler = logging.FileHandler(os.path.join(os.path.normpath(os.getcwd()), 'app.log'))
     logger.addHandler(file_handler)
-    withdraw_connections(logger, True)
-
-
-
+    driver = constructDriver(True)
+    driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
+    time.sleep(random.uniform(5.0, 10.0))
+    perform_scroll_to_bottom(driver)
+    WebDriverWait(driver=driver, timeout=60).until(
+        EC.presence_of_element_located((By.XPATH,'.//ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]'))
+    )
+    number_pages = len(list(driver.find_elements(By.XPATH, './/ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]/descendant::li')))
+    pages = list(map(lambda number: f'https://www.linkedin.com/mynetwork/invitation-manager/sent?page={number}', range(1, number_pages+1)))
+    print(number_pages)
+    input()
+    for page in pages:
+        driver.get(page)
+        time.sleep(random.uniform(5.0, 10.0))
+        withdraw_connections(driver, logger, True)
 
 
