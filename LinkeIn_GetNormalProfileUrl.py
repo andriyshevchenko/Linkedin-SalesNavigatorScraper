@@ -68,7 +68,7 @@ def scrap_from_csv(input_file, index: int):
                     raise error
                 else:
                     print(error)
-                    time.sleep(random.uniform(5.0, 10.0))
+                    time.sleep(60*30)
 
         driver.quit()
 
