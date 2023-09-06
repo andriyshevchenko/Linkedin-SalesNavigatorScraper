@@ -22,7 +22,7 @@ import argparse
 def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int):
     driver = constructDriver(True)
     print(f'number of rows = {len(input_file)}')
-    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber + 83
+    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
     print(f'skipping {skip} items')
     print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
     for row in input_file[skip:skip+skipLeadsPerWeekNumber]:

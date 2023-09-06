@@ -16,22 +16,25 @@ import random
 import os
 import argparse
 from datetime import date
+import gc
 
 def scrap_from_csv(input_file, index: int):
     driver = constructDriver(True)
     print('scrap_from_csv')
+    start_date = date.today()
     print(f'index = {index}')
-    path = f'Ukraine IT CEO {date.today()}.csv'
+    path = 'Ukraine IT CEO 2023-09-03.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
         print('opened file')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
         print(f'type = {type(input_file)}')
-        for row in input_file:
-            attempts = 0
+        for row in input_file[2964:]:
             try:
-                attempts += 1
+                if (date.today() - start_date).days > 0:
+                    start_date = date.today()
+                    gc.collect()
                 driver.get(row['ProfileUrl'])
                 ellipsis = WebDriverWait(driver=driver, timeout=10).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
@@ -61,14 +64,8 @@ def scrap_from_csv(input_file, index: int):
                 print('Waiting...')
                 time.sleep(45)
             except Exception as error:
-                if attempts == 10:
-                    driver = constructDriver(True)
-                if attempts > 10:
-                    driver.quit()
-                    raise error
-                else:
-                    print(error)
-                    time.sleep(60*30)
+                print(error)
+                time.sleep(60*30)
 
         driver.quit()
 
