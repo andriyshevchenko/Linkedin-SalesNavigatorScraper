@@ -35,15 +35,29 @@ def scrap_from_csv(input_file, index: int):
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
                     gc.collect()
-                driver.get(row['ProfileUrl'])
-                ellipsis = WebDriverWait(driver=driver, timeout=10).until(
+
+                WebDriverWait(driver=driver, timeout=60).until(
+                    EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
+                )
+
+                try:
+                    driver.get(row['ProfileUrl'])
+
+                    hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
+                    if hidden_profile is not None:
+                        print('Hidden profile')
+                        continue
+                except:
+                    pass
+
+                ellipsis = WebDriverWait(driver=driver, timeout=60).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
                 )     
 
                 time.sleep(random.uniform(5.0, 10.0))
                 ellipsis.click()
 
-                WebDriverWait(driver=driver, timeout=10).until(
+                WebDriverWait(driver=driver, timeout=60).until(
                     EC.presence_of_element_located((By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]'))
                 )       
                 menuItems = driver.find_elements(By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]//descendant::li')
@@ -51,7 +65,7 @@ def scrap_from_csv(input_file, index: int):
 
                 if len(copyLinkedInUrl) == 1:
                     copyButton = copyLinkedInUrl[0].find_element(By.XPATH, './/button[@class="ember-view _item_1xnv7i"]')
-                    WebDriverWait(driver=driver, timeout=10).until(
+                    WebDriverWait(driver=driver, timeout=60).until(
                         EC.element_to_be_clickable(copyButton)
                     )
                     time.sleep(random.uniform(5.0, 10.0))
@@ -89,15 +103,15 @@ def constructDriver(headless = False):
 
     driver.get('https://www.linkedin.com/sales')
     #driver.maximize_window()
-    username = WebDriverWait(driver=driver, timeout=10).until(
+    username = WebDriverWait(driver=driver, timeout=60).until(
         EC.presence_of_element_located((By.ID,'username'))
     )
     username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mai
-    password = WebDriverWait(driver=driver, timeout=10).until(
+    password = WebDriverWait(driver=driver, timeout=60).until(
         EC.presence_of_element_located((By.ID,'password'))
     )
     password.send_keys('BinanceZalupa228')  # Insert your password her
-    log_in_button = WebDriverWait(driver=driver, timeout=10).until(
+    log_in_button = WebDriverWait(driver=driver, timeout=60).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
     
     time.sleep(random.uniform(5.0, 10.0))
