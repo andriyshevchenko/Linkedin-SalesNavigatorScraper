@@ -33,6 +33,7 @@ def scrap_from_csv(input_file):
             try:
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
+                    print('Free memory')
                     gc.collect()
                 
                 driver.get(row['ProfileUrl'])
@@ -43,7 +44,8 @@ def scrap_from_csv(input_file):
                     )
 
                     hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
-                    if hidden_profile is not None:
+                    
+                    if hidden_profile is not None and len(hidden_profile) > 0:
                         print('Hidden profile')
                         continue
                 except:
@@ -115,7 +117,7 @@ def constructDriver(headless = False):
     
     time.sleep(random.uniform(5.0, 10.0))
     log_in_button.click()
-    time.sleep(random.uniform(5.0, 10.0))
+    time.sleep(60)
     return driver
 
 if __name__ == '__main__':
