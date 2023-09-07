@@ -18,11 +18,10 @@ import argparse
 from datetime import date
 import gc
 
-def scrap_from_csv(input_file, index: int):
+def scrap_from_csv(input_file):
     driver = constructDriver(True)
     print('scrap_from_csv')
     start_date = date.today()
-    print(f'index = {index}')
     path = 'Ukraine IT CEO 2023-09-03.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
         print('opened file')
@@ -35,10 +34,10 @@ def scrap_from_csv(input_file, index: int):
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
                     gc.collect()
+                
+                driver.get(row['ProfileUrl'])
 
                 try:
-                    driver.get(row['ProfileUrl'])
-
                     WebDriverWait(driver=driver, timeout=60).until(
                         EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
                     )
@@ -139,7 +138,7 @@ if __name__ == '__main__':
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for number in range(number_jobs):
                 futures.append(
-                   executor.submit(scrap_from_csv, chunks[number], number))
+                   executor.submit(scrap_from_csv, chunks[number]))
 
         for future in concurrent.futures.as_completed(futures):
             print(future.result())
