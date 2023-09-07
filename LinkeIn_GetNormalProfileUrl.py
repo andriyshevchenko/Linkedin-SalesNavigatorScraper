@@ -29,7 +29,7 @@ def scrap_from_csv(input_file):
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
         print(f'type = {type(input_file)}')
-        for row in input_file[3716:]:
+        for row in input_file[2965:]:
             try:
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
