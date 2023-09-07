@@ -36,12 +36,12 @@ def scrap_from_csv(input_file, index: int):
                     start_date = date.today()
                     gc.collect()
 
-                WebDriverWait(driver=driver, timeout=60).until(
-                    EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
-                )
-
                 try:
                     driver.get(row['ProfileUrl'])
+
+                    WebDriverWait(driver=driver, timeout=60).until(
+                        EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
+                    )
 
                     hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
                     if hidden_profile is not None:
@@ -116,7 +116,7 @@ def constructDriver(headless = False):
     
     time.sleep(random.uniform(5.0, 10.0))
     log_in_button.click()
-    
+    time.sleep(random.uniform(5.0, 10.0))
     return driver
 
 if __name__ == '__main__':
