@@ -17,20 +17,24 @@ import os
 import argparse
 from datetime import date
 import gc
+import requests.exceptions
 
 def scrap_from_csv(input_file):
     driver = constructDriver(True)
     print('scrap_from_csv')
     start_date = date.today()
-    path = 'Ukraine IT CEO 2023-09-03.csv'
+    path = f'Ukraine IT CEO {start_date}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
         print('opened file')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
         print(f'type = {type(input_file)}')
-        for row in input_file[2965:]:
+
+        index = 0
+        while index < len(input_file):
             try:
+                row = input_file[index]
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
                     print('Free memory')
@@ -38,19 +42,18 @@ def scrap_from_csv(input_file):
                 
                 driver.get(row['ProfileUrl'])
 
-                try:
-                    WebDriverWait(driver=driver, timeout=60).until(
-                        EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
-                    )
+                WebDriverWait(driver=driver, timeout=60).until(
+                    EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
+                )
 
-                    hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
+                full_name = driver.find_element(By.XPATH, './/section[@id="profile-card-section"]/descendant::h1[@data-anonymize]').text.strip()
+              
+                hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
                     
-                    if hidden_profile is not None and len(hidden_profile) > 0:
-                        print('Hidden profile')
-                        continue
-                except:
-                    pass
-
+                if hidden_profile is not None and len(hidden_profile) > 0:
+                    print('Hidden profile')
+                    continue
+              
                 ellipsis = WebDriverWait(driver=driver, timeout=60).until(
                     EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
                 )     
@@ -73,14 +76,20 @@ def scrap_from_csv(input_file):
                     copyButton.click()
                     linkedin_url = Tk().clipboard_get().strip()
                     print(linkedin_url)
-                    writer.writerow({ 'ProfileUrl': linkedin_url })
+                    writer.writerow({ 'ProfileUrl': linkedin_url, 'FullName': full_name })
                     output_file.flush()
                 
-                print('Waiting...')
-                time.sleep(45)
-            except Exception as error:
+                index = index + 1
+            except ConnectionError as error:
                 print(error)
+                print('Connection error. Retrying in 30 minutes.')
                 time.sleep(60*30)
+            except Exception:
+                print('Broken link')
+                index = index + 1
+            finally:
+                print('Waiting...')
+                time.sleep(45)   
 
         driver.quit()
 
