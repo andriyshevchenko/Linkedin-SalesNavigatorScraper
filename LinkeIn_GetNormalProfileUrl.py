@@ -26,7 +26,7 @@ def scrap_from_csv(input_file):
     path = f'Ukraine IT CEO {start_date}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
         print('opened file')
-        writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl'])
+        writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
         print(f'type = {type(input_file)}')
@@ -84,7 +84,8 @@ def scrap_from_csv(input_file):
                 print(error)
                 print('Connection error. Retrying in 30 minutes.')
                 time.sleep(60*30)
-            except Exception:
+            except Exception as error:
+                print(error)
                 print('Broken link')
                 index = index + 1
             finally:
