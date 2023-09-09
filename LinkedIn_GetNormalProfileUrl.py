@@ -47,7 +47,7 @@ async def scrap_from_csv(input_file, log):
                     await log.write('Free memory')
                     gc.collect()
                 
-                if math.floor((datetime.now() - start_time).total_seconds() / 60) == 1:
+                if math.floor((datetime.now() - start_time).total_seconds() / 60 * 5) == 1:
                     await log.write(f'Processed {index} profiles')
                     start_time = datetime.now()
 
