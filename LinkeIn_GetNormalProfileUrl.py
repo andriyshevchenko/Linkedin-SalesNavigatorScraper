@@ -28,20 +28,21 @@ class TelegramLog:
         self._function = _function
 
     def write(self, text):
+        print(self.chat_id)
         # Replace 'YOUR_CHAT_ID' with your actual chat ID
-        asyncio.create_task(self.bot.send_message(chat_id=self.chat_id, text=f'Function: {self._function}, Timestamp: {datetime.now()}: {text}'))
+        asyncio.run(self.bot.send_message(self.chat_id, f'Function: {self._function}, Timestamp: {datetime.now()}: {text}'))
 
 def scrap_from_csv(input_file, log):
     driver = constructDriver(True)
     print('scrap_from_csv')
     start_date = date.today()
     start_time = datetime.now()
-    path = f'Ukraine IT CEO {start_date}.csv'
+    path = 'Ukraine IT CEO 2023-09-08.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
-        index = 0
+        index = 917
         while index < len(input_file):
             try:
                 row = input_file[index]
@@ -149,9 +150,8 @@ if __name__ == '__main__':
     parser.add_argument('--profiles', default=None)
     args = parser.parse_args()
     number_jobs = 1
-
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '1001801037236', 'GetNormalProfileUrl')  
-    
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
+    log.write('Function started')
     with open('links 2023-08-22.csv', newline='') as csvfile: 
         reader = list(csv.DictReader(csvfile))
         chunks = np.array_split(reader, number_jobs)
@@ -165,7 +165,6 @@ if __name__ == '__main__':
 
         for future in concurrent.futures.as_completed(futures):
             print(future.result())
-
 
 
 
