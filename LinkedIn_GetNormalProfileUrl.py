@@ -100,6 +100,8 @@ async def scrap_from_csv(input_file, log):
                 await log.write(f'Broken link {row}')
                 index = index + 1
             finally:
+                if (index == 1):
+                    await log.write('Successfully started scraper')
                 print('Waiting...')
                 time.sleep(45)   
 
