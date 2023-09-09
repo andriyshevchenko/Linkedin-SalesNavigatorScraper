@@ -2,6 +2,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import time
+import math
 import csv
 from tkinter import Tk
 from selenium.webdriver.common.by import By
@@ -15,31 +16,44 @@ import pathlib
 import random
 import os
 import argparse
-from datetime import date
+from datetime import date, datetime
 import gc
-import requests.exceptions
+from telegram import Bot
+import asyncio
 
-def scrap_from_csv(input_file):
+class TelegramLog:
+    def __init__(self, bot, chat_id, _function):
+        self.bot = bot
+        self.chat_id = chat_id
+        self._function = _function
+
+    def write(self, text):
+        # Replace 'YOUR_CHAT_ID' with your actual chat ID
+        asyncio.create_task(self.bot.send_message(chat_id=self.chat_id, text=f'Function: {self._function}, Timestamp: {datetime.now()}: {text}'))
+
+def scrap_from_csv(input_file, log):
     driver = constructDriver(True)
     print('scrap_from_csv')
     start_date = date.today()
+    start_time = datetime.now()
     path = f'Ukraine IT CEO {start_date}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file:
-        print('opened file')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
-        print(f'type = {type(input_file)}')
-
         index = 0
         while index < len(input_file):
             try:
                 row = input_file[index]
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
-                    print('Free memory')
+                    log.write('Free memory')
                     gc.collect()
                 
+                if math.floor((datetime.now() - start_time).total_seconds() / 3600) == 1:
+                    log.write(f'Processed {index} profiles')
+                    start_time = datetime.now()
+
                 driver.get(row['ProfileUrl'])
 
                 WebDriverWait(driver=driver, timeout=60).until(
@@ -51,7 +65,7 @@ def scrap_from_csv(input_file):
                 hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
                     
                 if hidden_profile is not None and len(hidden_profile) > 0:
-                    print('Hidden profile')
+                    log.write(f'Hidden profile {row}')
                     continue
               
                 ellipsis = WebDriverWait(driver=driver, timeout=60).until(
@@ -82,11 +96,11 @@ def scrap_from_csv(input_file):
                 index = index + 1
             except ConnectionError as error:
                 print(error)
-                print('Connection error. Retrying in 30 minutes.')
+                log.write('Connection error. Retrying in 30 minutes.')
                 time.sleep(60*30)
             except Exception as error:
                 print(error)
-                print('Broken link')
+                log.write(f'Broken link {row}')
                 index = index + 1
             finally:
                 print('Waiting...')
@@ -135,22 +149,19 @@ if __name__ == '__main__':
     parser.add_argument('--profiles', default=None)
     args = parser.parse_args()
     number_jobs = 1
-     
+
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '1001801037236', 'GetNormalProfileUrl')  
+    
     with open('links 2023-08-22.csv', newline='') as csvfile: 
         reader = list(csv.DictReader(csvfile))
         chunks = np.array_split(reader, number_jobs)
-
-        print(f'type(chunks){type(chunks)}')
-        print(f'len(chunks){len(chunks)}')
-        print(f'type(chunks[0]){type(chunks[0])}')
-        print(f'len(chunks[0]){len(chunks[0])}')
 
         futures = []
          # scrape and crawl
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for number in range(number_jobs):
                 futures.append(
-                   executor.submit(scrap_from_csv, chunks[number]))
+                   executor.submit(scrap_from_csv, chunks[number], log))
 
         for future in concurrent.futures.as_completed(futures):
             print(future.result())
