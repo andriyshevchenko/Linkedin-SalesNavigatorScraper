@@ -10,4 +10,4 @@ class TelegramLog:
     async def write(self, text):
         format_string = "%Y-%m-%d %H:%M"
         server_timestamp = datetime.now(timezone.utc).strftime(format_string)
-        await self.bot.send_message(self.chat_id, f'Function: {self._function}\n Server Timestamp: {server_timestamp}\n {text}')
+        await self.bot.send_message(self.chat_id, f'Function: {self._function}\nServer Timestamp: {server_timestamp}\n{text}')
