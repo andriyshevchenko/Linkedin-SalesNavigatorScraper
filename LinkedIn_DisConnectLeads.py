@@ -61,6 +61,7 @@ def constructDriver(headless = False):
             attempts += 1
             if attempts == 1:
                 driver.get('https://www.linkedin.com/sales')
+                driver.maximize_window()
             else:
                 driver.refresh()
 
@@ -79,7 +80,7 @@ def constructDriver(headless = False):
 
             time.sleep(random.uniform(5.0, 10.0))
             log_in_button.click()
-
+            time.sleep(60)
             return driver
         except Exception as error:
             if attempts == 3:
@@ -99,11 +100,14 @@ async def main():
     )
     number_pages = len(list(driver.find_elements(By.XPATH, './/ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]/descendant::li')))
     pages = list(map(lambda number: f'https://www.linkedin.com/mynetwork/invitation-manager/sent?page={number}', range(1, number_pages+1)))
-    await log.write(f'There are {number_pages}. Withdrawing requests...')
+    await log.write(f'There are {number_pages} pages. Withdrawing requests...')
     for page in pages:
         driver.get(page)
         time.sleep(random.uniform(5.0, 10.0))
-        await withdraw_connections(driver, log)
+        try:
+            await withdraw_connections(driver, log)
+        except Exception as error:
+            await log.write(f'Problem encontered: {error}')
     await log.write('Function quit')
 
 if __name__ == '__main__':
