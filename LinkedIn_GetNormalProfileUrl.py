@@ -16,17 +16,8 @@ from datetime import date, datetime
 import gc
 from telegram import Bot
 import asyncio
-
-class TelegramLog:
-    def __init__(self, bot, chat_id, _function):
-        self.bot = bot
-        self.chat_id = chat_id
-        self._function = _function
-
-    async def write(self, text):
-        print(self.chat_id)
-        # Replace 'YOUR_CHAT_ID' with your actual chat ID
-        await self.bot.send_message(self.chat_id, f'Function: {self._function}, Timestamp: {datetime.now()}: {text}')
+from TelegramLog import TelegramLog
+import json
 
 async def scrap_from_csv(input_file, log):
     driver = constructDriver(True)
@@ -34,14 +25,18 @@ async def scrap_from_csv(input_file, log):
     start_date = date.today()
     start_time = datetime.now()
     path = f'Ukraine IT CEO {date.today()}.csv'
-    with open(path, 'w', encoding='utf8', newline='') as output_file:
+    with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'w+') as config_file:
+        config = json.load(config_file)
+        leads_scraped = config['SCRAPED_LEADS']
+        await log.write(f'There are {leads_scraped} processed profiles. Continue')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
-        index = 0
+        index = leads_scraped + 1
         while index < len(input_file):
             try:
                 row = input_file[index]
+                link = row['ProfileUrl']
                 if (date.today() - start_date).days > 0:
                     start_date = date.today()
                     await log.write('Free memory')
@@ -51,7 +46,7 @@ async def scrap_from_csv(input_file, log):
                     await log.write(f'Processed {index} profiles')
                     start_time = datetime.now()
 
-                driver.get(row['ProfileUrl'])
+                driver.get(link)
 
                 WebDriverWait(driver=driver, timeout=60).until(
                     EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
@@ -62,7 +57,8 @@ async def scrap_from_csv(input_file, log):
                 hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
                     
                 if hidden_profile is not None and len(hidden_profile) > 0:
-                    await log.write(f'Hidden profile {row}')
+                    await log.write(f'Hidden profile {link}')
+                    index = index + 1
                     continue
               
                 ellipsis = WebDriverWait(driver=driver, timeout=60).until(
@@ -89,7 +85,9 @@ async def scrap_from_csv(input_file, log):
                     print(linkedin_url)
                     writer.writerow({ 'ProfileUrl': linkedin_url, 'FullName': full_name })
                     output_file.flush()
-                
+                    json.dump(config, config_file, indent=4)
+                    config_file.flush()
+
                 index = index + 1
             except ConnectionError as error:
                 print(error)
@@ -97,13 +95,13 @@ async def scrap_from_csv(input_file, log):
                 time.sleep(60*30)
             except Exception as error:
                 print(error)
-                await log.write(f'Broken link {row}')
+                await log.write(f'Broken link {link}')
                 index = index + 1
             finally:
                 if (index == 1):
                     await log.write('Successfully started scraper')
                 print('Waiting...')
-                time.sleep(45)   
+                time.sleep(30)   
 
         driver.quit()
 
@@ -146,10 +144,12 @@ def constructDriver(headless = False):
 async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
+        
     with open('links.csv', newline='') as csvfile:
         reader = list(csv.DictReader(csvfile))
-
         await scrap_from_csv(reader, log)
+    await log.write('Function quit')
+
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

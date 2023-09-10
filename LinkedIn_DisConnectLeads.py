@@ -10,8 +10,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import pathlib 
 import random
-import logging
-import os
+from TelegramLog import TelegramLog
+from telegram import Bot
+import asyncio
 
 def perform_scroll_to_bottom(driver):
     height: int = 0
@@ -20,22 +21,20 @@ def perform_scroll_to_bottom(driver):
         driver.execute_script("window.scrollTo(0, {});".format(height))
         time.sleep(0.0125)
 
-def withdraw_connections(driver, logger, production: bool):
+async def withdraw_connections(driver, logger):
     perform_scroll_to_bottom(driver)
     time.sleep(random.uniform(5.0, 10.0))
     buttons = driver.find_elements(By.XPATH, '(.//span[contains(.,"weeks")])/following::button[@class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view invitation-card__action-btn"][1]')
     for button in buttons:
-        if (production):
-            action = ActionChains(driver)
-            # perform the operation
-            action.move_to_element(button).click().perform()
-            time.sleep(random.uniform(2.0, 5.0))
-            submit_button = WebDriverWait(driver=driver, timeout=60).until(
-                EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-modal__confirm-dialog-btn artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]')))
-            submit_button.click()
-            time.sleep(random.uniform(2.0, 5.0))
-        else:
-            logger.info('Skipping')
+        action = ActionChains(driver)
+        # perform the operation
+        action.move_to_element(button).click().perform()
+        time.sleep(random.uniform(5.0, 10.0))
+        submit_button = WebDriverWait(driver=driver, timeout=60).until(
+            EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-modal__confirm-dialog-btn artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]')))
+        submit_button.click()
+        time.sleep(random.uniform(5.0, 10.0))
+    await logger.write(f'Withdrawn {len(buttons)} requests')
 
 def constructDriver(headless = False):
     options = Options()
@@ -87,13 +86,11 @@ def constructDriver(headless = False):
                 driver.quit()
                 raise error
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger(__name__)
-    file_handler = logging.FileHandler(os.path.join(os.path.normpath(os.getcwd()), 'app.log'))
-    logger.addHandler(file_handler)
+async def main():
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'DisconnectLeads')  
+    await log.write('Function started')
     driver = constructDriver(True)
+    await log.write('Successfully started scraper')
     driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
     time.sleep(random.uniform(5.0, 10.0))
     perform_scroll_to_bottom(driver)
@@ -102,11 +99,14 @@ if __name__ == '__main__':
     )
     number_pages = len(list(driver.find_elements(By.XPATH, './/ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]/descendant::li')))
     pages = list(map(lambda number: f'https://www.linkedin.com/mynetwork/invitation-manager/sent?page={number}', range(1, number_pages+1)))
-    print(number_pages)
-    input()
+    await log.write(f'There are {number_pages}. Withdrawing requests...')
     for page in pages:
         driver.get(page)
         time.sleep(random.uniform(5.0, 10.0))
-        withdraw_connections(driver, logger, True)
+        await withdraw_connections(driver, log)
+    await log.write('Function quit')
 
-
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.run(main())
