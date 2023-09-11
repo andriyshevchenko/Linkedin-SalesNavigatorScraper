@@ -49,43 +49,29 @@ def constructDriver(headless = False):
         options.add_argument("--headless=new")
         options.add_experimental_option(
             "prefs", {"profile.managed_default_content_settings.images": 2})
-    options.add_argument("--disable-gpu")
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
     cache_manager = DriverCacheManager(root_dir=pathlib.Path.cwd())
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager(cache_manager=cache_manager).install(), options=options))
 
-    attempts = 0
-    while True:
-        try:
-            attempts += 1
-            if attempts == 1:
-                driver.get('https://www.linkedin.com/sales')
-                driver.maximize_window()
-            else:
-                driver.refresh()
-
-            time.sleep(random.uniform(5.0, 10.0))
-            
-            username = WebDriverWait(driver=driver, timeout=60).until(
-                EC.presence_of_element_located((By.ID,'username'))
-            )
-            username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mai
-            password = WebDriverWait(driver=driver, timeout=60).until(
-                EC.presence_of_element_located((By.ID,'password'))
-            )
-            password.send_keys('BinanceZalupa228')  # Insert your password her
-            log_in_button = WebDriverWait(driver=driver, timeout=60).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
-
-            time.sleep(random.uniform(5.0, 10.0))
-            log_in_button.click()
-            time.sleep(60)
-            return driver
-        except Exception as error:
-            if attempts == 3:
-                driver.quit()
-                raise error
+    driver.get('https://www.linkedin.com/sales')
+    #driver.maximize_window()
+    username = WebDriverWait(driver=driver, timeout=60).until(
+        EC.presence_of_element_located((By.ID,'username'))
+    )
+    username.send_keys('shewchenkoandriy@gmail.com')  # Insert your e-mai
+    password = WebDriverWait(driver=driver, timeout=60).until(
+        EC.presence_of_element_located((By.ID,'password'))
+    )
+    password.send_keys('BinanceZalupa228')  # Insert your password her
+    log_in_button = WebDriverWait(driver=driver, timeout=60).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="btn__primary--large from__button--floating"')))
+    
+    time.sleep(random.uniform(5.0, 10.0))
+    log_in_button.click()
+    time.sleep(60)
+    driver.switch_to.window(driver.current_window_handle)
+    return driver
 
 async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'DisconnectLeads')  

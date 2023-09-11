@@ -5,6 +5,7 @@ import time
 import math
 import csv
 from tkinter import Tk
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -27,12 +28,12 @@ async def scrap_from_csv(input_file, log):
     path = f'Ukraine IT CEO {date.today()}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'r+') as config_file:
         config = json.load(config_file)
-        leads_scraped = config['SCRAPED_LEADS']
+        leads_scraped = config['CURRENT_LEAD_INDEX']
         await log.write(f'There are {leads_scraped} processed profiles. Continue')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
-        index = leads_scraped + 1
+        index = leads_scraped
         while index < len(input_file):
             try:
                 row = input_file[index]
@@ -57,7 +58,7 @@ async def scrap_from_csv(input_file, log):
                 hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
                     
                 if hidden_profile is not None and len(hidden_profile) > 0:
-                    await log.write(f'Hidden profile {link}')
+                    await log.write(f'Hidden profile {link}. Skipping')
                     index = index + 1
                     continue
               
@@ -85,21 +86,21 @@ async def scrap_from_csv(input_file, log):
                     print(linkedin_url)
                     writer.writerow({ 'ProfileUrl': linkedin_url, 'FullName': full_name })
                     output_file.flush()
-                    
-                index = index + 1
-            except ConnectionError as error:
+                    index = index + 1
+
+            except (ConnectionError, WebDriverException) as error:
                 print(error)
                 await log.write('Connection error. Retrying in 30 minutes.')
                 time.sleep(60*30)
             except Exception as error:
                 print(error)
-                await log.write(f'Broken link {link}')
+                await log.write(f'Broken link {link}, skipping\n\nDebugging information:\n__{str(error)}__')
                 index = index + 1
             finally:
                 if (index == 1):
                     await log.write('Successfully started scraper')
                 config_file.seek(0)
-                config['SCRAPED_LEADS'] = index - 1
+                config['CURRENT_LEAD_INDEX'] = index
                 json.dump(config, config_file, indent=4)
                 config_file.flush()
                 print('Waiting...')
@@ -141,6 +142,7 @@ def constructDriver(headless = False):
     time.sleep(random.uniform(5.0, 10.0))
     log_in_button.click()
     time.sleep(60)
+    driver.switch_to.window(driver.current_window_handle)
     return driver
 
 async def main():
