@@ -25,7 +25,7 @@ async def scrap_from_csv(input_file, log):
     start_date = date.today()
     start_time = datetime.now()
     path = f'Ukraine IT CEO {date.today()}.csv'
-    with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'w+') as config_file:
+    with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'r+') as config_file:
         config = json.load(config_file)
         leads_scraped = config['SCRAPED_LEADS']
         await log.write(f'There are {leads_scraped} processed profiles. Continue')
@@ -85,9 +85,7 @@ async def scrap_from_csv(input_file, log):
                     print(linkedin_url)
                     writer.writerow({ 'ProfileUrl': linkedin_url, 'FullName': full_name })
                     output_file.flush()
-                    json.dump(config, config_file, indent=4)
-                    config_file.flush()
-
+                    
                 index = index + 1
             except ConnectionError as error:
                 print(error)
@@ -100,8 +98,12 @@ async def scrap_from_csv(input_file, log):
             finally:
                 if (index == 1):
                     await log.write('Successfully started scraper')
+                config_file.seek(0)
+                config['SCRAPED_LEADS'] = index - 1
+                json.dump(config, config_file, indent=4)
+                config_file.flush()
                 print('Waiting...')
-                time.sleep(30)   
+                time.sleep(45)   
 
         driver.quit()
 
