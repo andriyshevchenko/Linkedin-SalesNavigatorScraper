@@ -3,7 +3,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import time
 import csv
-from tkinter import Tk
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -11,20 +10,20 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.core.driver_cache import DriverCacheManager
-import numpy as np
 import math
 import pathlib 
-import os
 from datetime import date
 import random
-import argparse
+from TelegramLog import TelegramLog
+from telegram import Bot
+import asyncio
 
-def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int):
+async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, log):
     driver = constructDriver(True)
-    print(f'number of rows = {len(input_file)}')
+    await log.write('Successfully started scraper')
     skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
-    print(f'skipping {skip} items')
-    print(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
+    await log.write(f'skipping {skip} items')
+    await log.write(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
     for row in input_file[skip:skip+skipLeadsPerWeekNumber]:
         driver.get(row['ProfileUrl'])
         print(driver.current_url)
@@ -38,7 +37,8 @@ def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int):
             )
         except:
             if ('404' in driver.current_url):
-                print('Page doesn\'t exist')
+                link = row['ProfileUrl']
+                await log.write(f'Page {link} doesn\'t exist')
                 time.sleep(45)
                 continue
 
@@ -70,6 +70,7 @@ def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int):
             submit_button.click()
             full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
             print(f'Connected {full_name}')
+            await log.write(f'Connected {full_name}')
         except Exception as error:
             print(error)
             pass
@@ -123,21 +124,25 @@ def constructDriver(headless = False):
 
             time.sleep(random.uniform(5.0, 10.0))
             log_in_button.click()
-
+            time.sleep(60)
+            driver.switch_to.window(driver.current_window_handle)
             return driver
         except Exception as error:
             if attempts == 3:
                 driver.quit()
                 raise error
 
-if __name__ == '__main__':
-    with open('Ukraine IT CEO 2023-08-19.csv', newline='') as csvfile: 
+async def main():
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'ConnectLeads')  
+    await log.write('Function started')
+    with open('connect.csv', newline='', encoding="utf8") as csvfile: 
         reader = list(csv.DictReader(csvfile))
+        await connect_from_csv(reader, date(2023, 9, 11), 100, log)
 
-        print(f'len(reader){len(reader)}')
-
-        connect_from_csv(reader, date(2023, 8, 29), 100)
-
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.run(main())
 
 
 

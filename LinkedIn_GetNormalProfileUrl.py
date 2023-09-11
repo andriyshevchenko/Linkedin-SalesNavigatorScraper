@@ -28,12 +28,16 @@ async def scrap_from_csv(input_file, log):
     path = f'Ukraine IT CEO {date.today()}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'r+') as config_file:
         config = json.load(config_file)
-        leads_scraped = config['CURRENT_LEAD_INDEX']
-        await log.write(f'There are {leads_scraped} processed profiles. Continue')
+        current_lead = config['CURRENT_LEAD']
+        if len(current_lead) == 0:
+            current_lead_index = 0
+        else:
+            current_lead_index = input_file.index(current_lead) + 1
+        await log.write(f'There are {current_lead_index} processed profiles. Continue')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
         print(f'number of rows = {len(input_file)}')
-        index = leads_scraped
+        index = current_lead_index
         while index < len(input_file):
             try:
                 row = input_file[index]
@@ -43,7 +47,7 @@ async def scrap_from_csv(input_file, log):
                     await log.write('Free memory')
                     gc.collect()
                 
-                if math.floor((datetime.now() - start_time).total_seconds() / 60 * 60 * 12) == 1:
+                if math.floor((datetime.now() - start_time).total_seconds() / 60 * 60 * 1) == 1:
                     await log.write(f'Processed {index} profiles')
                     start_time = datetime.now()
 
@@ -90,17 +94,20 @@ async def scrap_from_csv(input_file, log):
 
             except (ConnectionError, WebDriverException) as error:
                 print(error)
-                await log.write('Connection error. Retrying in 30 minutes.')
-                time.sleep(60*30)
+                if "ERR_CONNECTION_TIMED_OUT" in str(error):
+                    await log.write('Connection error. Retrying in 30 minutes.')
+                    time.sleep(60*30)
+                else:
+                    await log.write(f'Broken link{link}\nDebugging information:\n__{str(error)}__')
             except Exception as error:
                 print(error)
-                await log.write(f'Broken link {link}, skipping\n\nDebugging information:\n__{str(error)}__')
+                await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{str(error)}__')
                 index = index + 1
             finally:
                 if (index == 1):
                     await log.write('Successfully started scraper')
                 config_file.seek(0)
-                config['CURRENT_LEAD_INDEX'] = index
+                config['CURRENT_LEAD'] = link
                 json.dump(config, config_file, indent=4)
                 config_file.flush()
                 print('Waiting...')
