@@ -138,6 +138,7 @@ async def main():
     with open('connect.csv', newline='', encoding="utf8") as csvfile: 
         reader = list(csv.DictReader(csvfile))
         await connect_from_csv(reader, date(2023, 9, 11), 100, log)
+        await log.write('Function quit')
 
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
