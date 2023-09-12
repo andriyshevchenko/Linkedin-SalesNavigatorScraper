@@ -99,6 +99,7 @@ async def scrap_from_csv(input_file, log):
                     time.sleep(60*30)
                 else:
                     await log.write(f'Broken link{link}\nDebugging information:\n__{str(error)}__')
+                    index = index + 1
             except Exception as error:
                 print(error)
                 await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{str(error)}__')
