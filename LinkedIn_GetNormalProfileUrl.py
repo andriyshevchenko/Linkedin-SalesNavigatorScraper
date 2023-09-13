@@ -19,11 +19,11 @@ from telegram import Bot
 import asyncio
 from TelegramLog import TelegramLog
 import json
+import traceback
 
 async def scrap_from_csv(input_file, log):
     driver = constructDriver(True)
     print('scrap_from_csv')
-    start_date = date.today()
     start_time = datetime.now()
     path = f'Ukraine IT CEO {date.today()}.csv'
     with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'r+') as config_file:
@@ -42,12 +42,14 @@ async def scrap_from_csv(input_file, log):
             try:
                 row = input_file[index]
                 link = row['ProfileUrl']
-                if (date.today() - start_date).days > 0:
-                    start_date = date.today()
-                    await log.write('Free memory')
+
+                if math.floor((datetime.now() - start_time).total_seconds() / (3600)) == 1:
+                    await log.write('Free memory: start')
                     gc.collect()
+                    await log.write('Free memory: done')
+                    start_time = datetime.now()
                 
-                if math.floor((datetime.now() - start_time).total_seconds() / 60 * 60 * 1) == 1:
+                if math.floor((datetime.now() - start_time).total_seconds() / (3600)) == 2:
                     await log.write(f'Processed {index} profiles')
                     start_time = datetime.now()
 
@@ -94,15 +96,16 @@ async def scrap_from_csv(input_file, log):
 
             except (ConnectionError, WebDriverException) as error:
                 print(error)
-                if "ERR_CONNECTION_TIMED_OUT" in str(error):
-                    await log.write('Connection error. Retrying in 30 minutes.')
+                message = traceback.format_exception()
+                if "net::ERR_CONNECTION_TIMED_OUT" in message:
                     time.sleep(60*30)
+                    await log.write('Connection error. Retrying in 30 minutes.')
                 else:
-                    await log.write(f'Broken link{link}\nDebugging information:\n__{str(error)}__')
+                    await log.write(f'Broken link:\n{link}\nDebugging information:\n__{message}__')
                     index = index + 1
             except Exception as error:
                 print(error)
-                await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{str(error)}__')
+                await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{message}__')
                 index = index + 1
             finally:
                 if (index == 1):
