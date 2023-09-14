@@ -22,6 +22,7 @@ import json
 import traceback
 
 async def scrap_from_csv(input_file, log):
+    input = list(map(lambda row: row['ProfileUrl'], input_file))
     driver = constructDriver(True)
     print('scrap_from_csv')
     start_time = datetime.now()
@@ -32,27 +33,23 @@ async def scrap_from_csv(input_file, log):
         if len(current_lead) == 0:
             current_lead_index = 0
         else:
-            current_lead_index = input_file.index(current_lead) + 1
+            current_lead_index = input.index(current_lead) + 1
         await log.write(f'There are {current_lead_index} processed profiles. Continue')
         writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
         writer.writeheader()
-        print(f'number of rows = {len(input_file)}')
+        print(f'number of rows = {len(input)}')
         index = current_lead_index
-        while index < len(input_file):
+        while index < len(input):
             try:
-                row = input_file[index]
-                link = row['ProfileUrl']
+                row = input[index]
+                link = row
 
-                if math.floor((datetime.now() - start_time).total_seconds() / (3600)) == 1:
+                if math.floor((datetime.now() - start_time).total_seconds() / 3600) == 2:
                     await log.write('Free memory: start')
                     gc.collect()
                     await log.write('Free memory: done')
                     start_time = datetime.now()
-                
-                if math.floor((datetime.now() - start_time).total_seconds() / (3600)) == 2:
-                    await log.write(f'Processed {index} profiles')
-                    start_time = datetime.now()
-
+            
                 driver.get(link)
 
                 WebDriverWait(driver=driver, timeout=60).until(
@@ -96,7 +93,7 @@ async def scrap_from_csv(input_file, log):
 
             except (ConnectionError, WebDriverException) as error:
                 print(error)
-                message = traceback.format_exception()
+                message = traceback.format_exception(error)
                 if "net::ERR_CONNECTION_TIMED_OUT" in message:
                     time.sleep(60*30)
                     await log.write('Connection error. Retrying in 30 minutes.')
@@ -110,12 +107,12 @@ async def scrap_from_csv(input_file, log):
             finally:
                 if (index == 1):
                     await log.write('Successfully started scraper')
-                config_file.seek(0)
+                config_file.truncate(0)
                 config['CURRENT_LEAD'] = link
                 json.dump(config, config_file, indent=4)
                 config_file.flush()
                 print('Waiting...')
-                time.sleep(45)   
+                time.sleep(30)   
 
         driver.quit()
 
