@@ -24,7 +24,7 @@ def perform_scroll_to_bottom(driver):
 async def withdraw_connections(driver, logger):
     perform_scroll_to_bottom(driver)
     time.sleep(random.uniform(5.0, 10.0))
-    buttons = driver.find_elements(By.XPATH, '(.//span[contains(.,"weeks")])/following::button[@class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view invitation-card__action-btn"][1]')
+    buttons = driver.find_elements(By.XPATH, '(.//span[contains(.,"month")])/following::button[@class="artdeco-button artdeco-button--muted artdeco-button--3 artdeco-button--tertiary ember-view invitation-card__action-btn"][1]')
     for button in buttons:
         action = ActionChains(driver)
         # perform the operation
