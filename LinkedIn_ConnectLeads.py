@@ -28,6 +28,16 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
         driver.get(row['ProfileUrl'])
         print(driver.current_url)
        
+        WebDriverWait(driver=driver, timeout=60).until(
+            EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
+        )           
+        full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
+
+        if len(driver.find_elements(By.XPATH, '//*[text()[contains(., "Pending") or contains(., "Remove Connection")]]')) > 0:
+            await log.write(f'Already connected {full_name}.skipping')
+            time.sleep(45)
+            continue
+
         connect_button = None
         try:
             # Connect
@@ -68,7 +78,6 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
             )
             time.sleep(random.uniform(5.0, 10.0))
             submit_button.click()
-            full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
             print(f'Connected {full_name}')
             await log.write(f'Connected {full_name}')
         except Exception as error:

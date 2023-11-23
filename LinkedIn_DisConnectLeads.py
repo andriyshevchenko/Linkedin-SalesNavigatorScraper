@@ -31,7 +31,7 @@ async def withdraw_connections(driver, logger):
         action.move_to_element(button).click().perform()
         time.sleep(random.uniform(5.0, 10.0))
         submit_button = WebDriverWait(driver=driver, timeout=60).until(
-            EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-modal__confirm-dialog-btn artdeco-button artdeco-button--2 artdeco-button--primary ember-view"]')))
+            EC.element_to_be_clickable((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view artdeco-modal__confirm-dialog-btn"]')))
         submit_button.click()
         time.sleep(random.uniform(5.0, 10.0))
     await logger.write(f'Withdrawn {len(buttons)} requests')

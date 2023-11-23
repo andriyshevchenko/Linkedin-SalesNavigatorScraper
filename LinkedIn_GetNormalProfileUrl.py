@@ -112,7 +112,7 @@ async def scrap_from_csv(input_file, log):
                 json.dump(config, config_file, indent=4)
                 config_file.flush()
                 print('Waiting...')
-                time.sleep(30)   
+                time.sleep(45)   
 
         driver.quit()
 
