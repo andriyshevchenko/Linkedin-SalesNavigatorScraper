@@ -15,9 +15,8 @@ if __name__ == '__main__':
 
     # Define the SQL statement to create the table
     create_table_sql = f"""
-    CREATE TABLE IF NOT EXISTS connected_profiles (
-        profile_url TEXT PRIMARY KEY,
-        full_name TEXT
+    CREATE TABLE IF NOT EXISTS current_working_copy (
+        sales_navigator_profile_url TEXT PRIMARY KEY
     );
     """
 
@@ -40,7 +39,7 @@ if __name__ == '__main__':
         # Open and read the CSV file
         with open(args.file_path, 'r', encoding="utf-8") as csv_file:
             # Use the COPY statement to insert data from the CSV into the table
-            cur.copy_expert(sql=f"COPY connected_profiles FROM stdin WITH CSV HEADER", file=csv_file)
+            cur.copy_expert(sql=f"COPY current_working_copy FROM stdin WITH CSV HEADER", file=csv_file)
 
         # Commit the transaction
         conn.commit()

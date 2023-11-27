@@ -3,7 +3,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import time
 import math
-import csv
 from tkinter import Tk
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -13,106 +12,107 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import pathlib 
 import random
-from datetime import date, datetime
+from datetime import datetime
 import gc
 from telegram import Bot
 import asyncio
 from TelegramLog import TelegramLog
-import json
 import traceback
+import asyncpg
 
-async def scrap_from_csv(input_file, log):
-    input = list(map(lambda row: row['ProfileUrl'], input_file))
+async def scrap_from_sql(log, limit: int):
     driver = constructDriver(True)
-    print('scrap_from_csv')
+    connection = await asyncpg.connect(
+        host='159.89.13.130',
+        port=5432,
+        database='ukraine_it_ceo',
+        user='Administrator',
+        password='lUwm8vS21jLW'
+    )
+    current_lead_index = int(await connection.fetchval('SELECT COUNT(*) FROM connected_profiles'))
+    remaining_profiles_number = int(await connection.fetchval('SELECT COUNT(*) FROM current_working_copy'))
+    await log.write(f'There are {current_lead_index} processed profiles. Continue')
+    index = 0
     start_time = datetime.now()
-    path = f'Ukraine IT CEO {date.today()}.csv'
-    with open(path, 'w', encoding='utf8', newline='') as output_file, open('LinkedIn_GetNormalProfileUrl.json', 'r+') as config_file:
-        config = json.load(config_file)
-        current_lead = config['CURRENT_LEAD']
-        if len(current_lead) == 0:
-            current_lead_index = 0
-        else:
-            current_lead_index = input.index(current_lead) + 1
-        await log.write(f'There are {current_lead_index} processed profiles. Continue')
-        writer = csv.DictWriter(output_file, delimiter=',', fieldnames=['ProfileUrl', 'FullName'])
-        writer.writeheader()
-        print(f'number of rows = {len(input)}')
-        index = current_lead_index
-        while index < len(input):
-            try:
-                row = input[index]
-                link = row
-
-                if math.floor((datetime.now() - start_time).total_seconds() / 3600) == 2:
-                    await log.write('Free memory: start')
-                    gc.collect()
-                    await log.write('Free memory: done')
-                    start_time = datetime.now()
+    while index < limit and remaining_profiles_number > 0:
+        try:
+            row = await connection.fetchrow('SELECT * FROM current_working_copy LIMIT 1')
+            link = row['sales_navigator_profile_url']
             
-                driver.get(link)
+            if math.floor((datetime.now() - start_time).total_seconds() / 3600) == 2:
+                await log.write('Free memory: start')
+                gc.collect()
+                await log.write('Free memory: done')
+                start_time = datetime.now()
+        
+            driver.get(link)
 
-                WebDriverWait(driver=driver, timeout=60).until(
-                    EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
-                )
+            WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, './/section[@id="profile-card-section"]'))
+            )
 
-                full_name = driver.find_element(By.XPATH, './/section[@id="profile-card-section"]/descendant::h1[@data-anonymize]').text.strip()
-              
-                hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
-                    
-                if hidden_profile is not None and len(hidden_profile) > 0:
-                    await log.write(f'Hidden profile {link}. Skipping')
-                    index = index + 1
-                    continue
-              
-                ellipsis = WebDriverWait(driver=driver, timeout=60).until(
-                    EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
-                )     
-
-                time.sleep(random.uniform(5.0, 10.0))
-                ellipsis.click()
-
-                WebDriverWait(driver=driver, timeout=60).until(
-                    EC.presence_of_element_located((By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]'))
-                )       
-                menuItems = driver.find_elements(By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]//descendant::li')
-                copyLinkedInUrl = list(filter(lambda item: item.find_element(By.XPATH, './/div[@class="_text_1xnv7i"]').text.strip() == 'Copy LinkedIn.com URL', menuItems))
-
-                if len(copyLinkedInUrl) == 1:
-                    copyButton = copyLinkedInUrl[0].find_element(By.XPATH, './/button[@class="ember-view _item_1xnv7i"]')
-                    WebDriverWait(driver=driver, timeout=60).until(
-                        EC.element_to_be_clickable(copyButton)
-                    )
-                    time.sleep(random.uniform(5.0, 10.0))
-                    copyButton.click()
-                    linkedin_url = Tk().clipboard_get().strip()
-                    print(linkedin_url)
-                    writer.writerow({ 'ProfileUrl': linkedin_url, 'FullName': full_name })
-                    output_file.flush()
-                    index = index + 1
-
-            except (ConnectionError, WebDriverException) as error:
-                print(error)
-                message = traceback.format_exception(error)
-                if "net::ERR_CONNECTION_TIMED_OUT" in message:
-                    time.sleep(60*30)
-                    await log.write('Connection error. Retrying in 30 minutes.')
-                else:
-                    await log.write(f'Broken link:\n{link}\nDebugging information:\n__{message}__')
-                    index = index + 1
-            except Exception as error:
-                print(error)
-                await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{message}__')
+            full_name = driver.find_element(By.XPATH, './/section[@id="profile-card-section"]/descendant::h1[@data-anonymize]').text.strip()
+          
+            hidden_profile = driver.find_elements(By.XPATH, '//*[text()[contains(., "LinkedIn Member") or contains(., "Unlock full profile")]]')
+                
+            if hidden_profile is not None and len(hidden_profile) > 0:
+                await log.write(f'Hidden profile {link}. Skipping')
                 index = index + 1
-            finally:
-                if (index == 1):
-                    await log.write('Successfully started scraper')
-                config_file.truncate(0)
-                config['CURRENT_LEAD'] = link
-                json.dump(config, config_file, indent=4)
-                config_file.flush()
-                print('Waiting...')
-                time.sleep(45)   
+                continue
+          
+            ellipsis = WebDriverWait(driver=driver, timeout=60).until(
+                EC.element_to_be_clickable((By.XPATH, './/button[@class="ember-view _button_ps32ck _small_ps32ck _tertiary_ps32ck _circle_ps32ck _container_iq15dg _overflow-menu--trigger_1xow7n"]'))
+            )     
+
+            time.sleep(random.uniform(5.0, 10.0))
+            ellipsis.click()
+
+            WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]'))
+            )       
+            menuItems = driver.find_elements(By.XPATH, './/div[@class="_container_x5gf48 _visible_x5gf48 _container_iq15dg _raised_1aegh9"]//descendant::li')
+            copyLinkedInUrl = list(filter(lambda item: item.find_element(By.XPATH, './/div[@class="_text_1xnv7i"]').text.strip() == 'Copy LinkedIn.com URL', menuItems))
+
+            if len(copyLinkedInUrl) == 1:
+                copyButton = copyLinkedInUrl[0].find_element(By.XPATH, './/button[@class="ember-view _item_1xnv7i"]')
+                WebDriverWait(driver=driver, timeout=60).until(
+                    EC.element_to_be_clickable(copyButton)
+                )
+                time.sleep(random.uniform(5.0, 10.0))
+                copyButton.click()
+                linkedin_url = Tk().clipboard_get().strip()
+                print(linkedin_url)
+
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "connected_profiles" table
+                    await connection.execute('INSERT INTO connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', linkedin_url, full_name)
+
+                    # Delete top row from "current_working_copy" table
+                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+
+                index = index + 1
+
+        except (ConnectionError, WebDriverException) as error:
+            print(error)
+            message = traceback.format_exception(error)
+            if "net::ERR_CONNECTION_TIMED_OUT" in message:
+                time.sleep(60*30)
+                await log.write('Connection error. Retrying in 30 minutes.')
+            else:
+                await log.write(f'Broken link:\n{link}\nDebugging information:\n__{message}__')
+                await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+                index = index + 1
+        except Exception as error:
+            print(error)
+            message = traceback.format_exception(error)
+            await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{message}__')
+            index = index + 1
+        finally:
+            if (index == 1):
+                await log.write('Successfully started scraper')
+            print('Waiting...')
+            time.sleep(45)   
 
         driver.quit()
 
@@ -157,9 +157,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    with open('links.csv', newline='') as csvfile:
-        reader = list(csv.DictReader(csvfile))
-        await scrap_from_csv(reader, log)
+    await scrap_from_sql(log, 250)
     await log.write('Function quit')
 
 if __name__ == '__main__':
