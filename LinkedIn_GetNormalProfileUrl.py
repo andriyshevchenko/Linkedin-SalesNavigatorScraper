@@ -34,7 +34,7 @@ async def scrap_from_sql(log, limit: int):
     await log.write(f'There are {current_lead_index} processed profiles. Continue')
     index = 0
     start_time = datetime.now()
-    while index < limit and remaining_profiles_number > 0:
+    while index < min(limit, remaining_profiles_number):
         try:
             row = await connection.fetchrow('SELECT * FROM current_working_copy LIMIT 1')
             link = row['sales_navigator_profile_url']
@@ -160,7 +160,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    await scrap_from_sql(log, 250)
+    await scrap_from_sql(log, 125)
     await log.write('Function quit')
 
 if __name__ == '__main__':
