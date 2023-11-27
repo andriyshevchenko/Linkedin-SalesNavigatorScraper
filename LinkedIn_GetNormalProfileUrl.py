@@ -114,7 +114,10 @@ async def scrap_from_sql(log, limit: int):
             print('Waiting...')
             time.sleep(45)   
 
+        impacted_profiles_number = remaining_profiles_number - int(await connection.fetchval('SELECT COUNT(*) FROM current_working_copy'))
+        await log.write(f'Processed profiles: {impacted_profiles_number}')
         driver.quit()
+        connection.close()
 
 def constructDriver(headless = False):
     options = Options()
