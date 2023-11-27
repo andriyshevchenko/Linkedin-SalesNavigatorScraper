@@ -101,7 +101,15 @@ async def scrap_from_sql(log, limit: int):
                 await log.write('Connection error. Retrying in 30 minutes.')
             else:
                 await log.write(f'Broken link:\n{link}\nDebugging information:\n__{message}__')
-                await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+                
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "broken_links" table
+                    await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+
+                    # Delete top row from "current_working_copy" table
+                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+
                 index = index + 1
         except Exception as error:
             print(error)
@@ -161,7 +169,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    await scrap_from_sql(log, 125)
+    await scrap_from_sql(log, 25)
     await log.write('Function quit')
 
 if __name__ == '__main__':
