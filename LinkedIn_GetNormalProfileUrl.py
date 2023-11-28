@@ -19,16 +19,11 @@ import asyncio
 from TelegramLog import TelegramLog
 import traceback
 import asyncpg
+import asyncpg.exceptions
 
 async def scrap_from_sql(log, limit: int):
     driver = constructDriver(True)
-    connection = await asyncpg.connect(
-        host='159.89.13.130',
-        port=5432,
-        database='ukraine_it_ceo',
-        user='Administrator',
-        password='lUwm8vS21jLW'
-    )
+    connection = await getConnection()
     current_lead_index = int(await connection.fetchval('SELECT COUNT(*) FROM connected_profiles'))
     remaining_profiles_number = int(await connection.fetchval('SELECT COUNT(*) FROM current_working_copy'))
     await log.write(f'There are {current_lead_index} processed profiles. Continue')
@@ -111,10 +106,15 @@ async def scrap_from_sql(log, limit: int):
                     await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
 
                 index = index + 1
+        except InterfaceError as error:
+            print(error)
+            message = traceback.format_exception(error)
+            await log.write(f'SQL Error\n\nDebugging information:\n__{message}__')
+            connection = await getConnection()
         except Exception as error:
             print(error)
             message = traceback.format_exception(error)
-            await log.write(f'Uknown error.\n\nLink{link}\nDebugging information:\n__{message}__')
+            await log.write(f'Uknown error.\n\nLink\n\n{link}\nDebugging information:\n__{message}__')
             index = index + 1
         finally:
             if (index == 1):
@@ -127,6 +127,15 @@ async def scrap_from_sql(log, limit: int):
         
     driver.quit()
     connection.close()
+
+async def getConnection():
+    return await asyncpg.connect(
+        host='159.89.13.130',
+        port=5432,
+        database='ukraine_it_ceo',
+        user='Administrator',
+        password='lUwm8vS21jLW'
+    )
 
 def constructDriver(headless = False):
     options = Options()
@@ -169,7 +178,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    await scrap_from_sql(log, 125)
+    await scrap_from_sql(log, 250)
     await log.write('Function quit')
 
 if __name__ == '__main__':
