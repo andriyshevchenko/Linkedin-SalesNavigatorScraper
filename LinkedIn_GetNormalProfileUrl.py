@@ -178,7 +178,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    await scrap_from_sql(log, 250)
+    await scrap_from_sql(log, 125)
     await log.write('Function quit')
 
 if __name__ == '__main__':
