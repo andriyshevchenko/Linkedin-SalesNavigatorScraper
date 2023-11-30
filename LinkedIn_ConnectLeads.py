@@ -33,8 +33,8 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
         )           
         full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
 
-        if len(driver.find_elements(By.XPATH, '//*[text()[contains(., "Pending") or contains(., "Remove Connection")]]')) > 0:
-            await log.write(f'Already connected {full_name}.skipping')
+        if len(driver.find_elements(By.XPATH, f'//*[contains(@aria-label, "Invite {full_name} to connect")]')) == 0:
+            await log.write(f'Already connected {full_name}. skipping')
             time.sleep(45)
             continue
 
@@ -146,7 +146,7 @@ async def main():
     await log.write('Function started')
     with open('connect.csv', newline='', encoding="utf8") as csvfile: 
         reader = list(csv.DictReader(csvfile))
-        await connect_from_csv(reader, date(2023, 11, 29), 125, log)
+        await connect_from_csv(reader, date(2023, 12, 3), 150, log)
         await log.write('Function quit')
 
 if __name__ == '__main__':
