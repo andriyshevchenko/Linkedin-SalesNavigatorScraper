@@ -52,6 +52,15 @@ async def scrap_from_sql(log, limit: int):
                 
             if hidden_profile is not None and len(hidden_profile) > 0:
                 await log.write(f'Hidden profile {link}. Skipping')
+                
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "broken_links" table
+                    await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+
+                    # Delete top row from "current_working_copy" table
+                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+
                 index = index + 1
                 continue
           
@@ -178,7 +187,7 @@ async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
-    await scrap_from_sql(log, 125)
+    await scrap_from_sql(log, 150)
     await log.write('Function quit')
 
 if __name__ == '__main__':
