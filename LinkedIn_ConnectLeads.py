@@ -10,21 +10,23 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.core.driver_cache import DriverCacheManager
-import math
 import pathlib 
-from datetime import date
 import random
 from TelegramLog import TelegramLog
 from telegram import Bot
 import asyncio
+import traceback
+import asyncpg
+import asyncpg.exceptions
 
-async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: int, log):
+async def connect_from_csv(input_file, limit, log):
     driver = constructDriver(True)
+    connection = await getConnection()
     await log.write('Successfully started scraper')
-    skip = math.floor((date.today() - startDate).days / 7) * skipLeadsPerWeekNumber
-    await log.write(f'skipping {skip} items')
-    await log.write(f'remaining number of lines: {len(input_file[skip:skip+skipLeadsPerWeekNumber])}')
-    for row in input_file[skip:skip+skipLeadsPerWeekNumber]:
+    await log.write(f'remaining number of lines: {min(limit, len(input_file))}')
+    index = 0
+    while index < min(limit, len(input_file)):
+        row = input_file[index]
         driver.get(row['ProfileUrl'])
         print(driver.current_url)
        
@@ -36,6 +38,7 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
         if len(driver.find_elements(By.XPATH, f'//*[contains(@aria-label, "Invite {full_name} to connect")]')) == 0:
             await log.write(f'Already connected {full_name}. skipping')
             time.sleep(45)
+            index = index + 1
             continue
 
         connect_button = None
@@ -50,6 +53,7 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
                 link = row['ProfileUrl']
                 await log.write(f'Page {link} doesn\'t exist')
                 time.sleep(45)
+                index = index + 1
                 continue
 
         try:
@@ -79,14 +83,38 @@ async def connect_from_csv(input_file, startDate: date, skipLeadsPerWeekNumber: 
             time.sleep(random.uniform(5.0, 10.0))
             submit_button.click()
             print(f'Connected {full_name}')
+
+            async with connection.transaction():
+
+                # Call stored procedure to insert into "already_connected_profiles" table
+                await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', row['ProfileUrl'], row['FullName'])
+
             await log.write(f'Connected {full_name}')
+            index = index + 1
+        except InterfaceError as error:
+            print(error)
+            message = traceback.format_exception(error)
+            await log.write(f'SQL Error\n\nDebugging information:\n__{message}__')
+            connection = await getConnection()
         except Exception as error:
             print(error)
-            pass
+            message = traceback.format_exception(error)
+            await log.write(f'Uknown error.\n\nLink\n\n{link}\nDebugging information:\n__{message}__')
+            index = index + 1
         
         time.sleep(45)
         
     driver.quit()
+    connection.close()
+
+async def getConnection():
+    return await asyncpg.connect(
+        host='159.89.13.130',
+        port=5432,
+        database='ukraine_it_ceo',
+        user='Administrator',
+        password='lUwm8vS21jLW'
+    )
 
 def constructDriver(headless = False):
     options = Options()
@@ -146,7 +174,7 @@ async def main():
     await log.write('Function started')
     with open('connect.csv', newline='', encoding="utf8") as csvfile: 
         reader = list(csv.DictReader(csvfile))
-        await connect_from_csv(reader, date(2023, 12, 3), 150, log)
+        await connect_from_csv(reader, 100, log)
         await log.write('Function quit')
 
 if __name__ == '__main__':
