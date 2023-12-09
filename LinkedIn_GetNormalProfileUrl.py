@@ -101,8 +101,7 @@ async def scrap_from_sql(log, limit: int):
             print(error)
             message = traceback.format_exception(error)
             if "net::ERR_CONNECTION_TIMED_OUT" in message:
-                time.sleep(60*30)
-                await log.write('Connection error. Retrying in 30 minutes.')
+                await log.write('Connection error.')
             else:
                 await log.write(f'Broken link:\n{link}\nDebugging information:\n__{message}__')
                 
