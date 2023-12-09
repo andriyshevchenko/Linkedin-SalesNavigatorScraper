@@ -174,7 +174,7 @@ async def main():
     await log.write('Function started')
     with open('connect.csv', newline='', encoding="utf8") as csvfile: 
         reader = list(csv.DictReader(csvfile))
-        await connect_from_csv(reader, 100, log)
+        await connect_from_csv(reader, 150, log)
         await log.write('Function quit')
 
 if __name__ == '__main__':
