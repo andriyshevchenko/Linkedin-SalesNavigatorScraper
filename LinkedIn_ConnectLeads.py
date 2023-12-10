@@ -83,11 +83,11 @@ async def connect_from_csv(input_file, limit, log):
             time.sleep(random.uniform(5.0, 10.0))
             submit_button.click()
             print(f'Connected {full_name}')
-
+            
             async with connection.transaction():
-
+                link = row['ProfileUrl']
                 # Call stored procedure to insert into "already_connected_profiles" table
-                await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', row['ProfileUrl'], row['FullName'])
+                await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
             await log.write(f'Connected {full_name}')
             index = index + 1
