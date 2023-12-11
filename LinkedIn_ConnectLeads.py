@@ -19,15 +19,23 @@ import traceback
 import asyncpg
 import asyncpg.exceptions
 
-async def connect_from_csv(input_file, limit, log):
+async def connect_from_csv(limit, log):
     driver = constructDriver(True)
     connection = await getConnection()
+    inputs = await connection.fetch("""
+        SELECT pp.profile_url, pp.full_name
+        FROM connected_profiles pp
+        LEFT JOIN already_connected_profiles acp
+            ON pp.profile_url = acp.profile_url
+        WHERE acp.profile_url IS NULL
+        LIMIT $1;""", limit)
+
     await log.write('Successfully started scraper')
-    await log.write(f'remaining number of lines: {min(limit, len(input_file))}')
+    await log.write(f'remaining number of lines: {len(inputs)}')
     index = 0
-    while index < min(limit, len(input_file)):
-        row = input_file[index]
-        driver.get(row['ProfileUrl'])
+    while index < len(inputs):
+        row = inputs[index]
+        driver.get(row['profile_url'])
         print(driver.current_url)
        
         WebDriverWait(driver=driver, timeout=60).until(
@@ -35,7 +43,7 @@ async def connect_from_csv(input_file, limit, log):
         )           
         full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
 
-        if len(driver.find_elements(By.XPATH, f'//*[contains(@aria-label, "Invite {full_name} to connect")]')) == 0:
+        if len(driver.find_elements(By.XPATH, '//main//*[contains(@aria-label, "Invite") and contains(@aria-label, "to connect")]')) == 0:
             await log.write(f'Already connected {full_name}. skipping')
             time.sleep(45)
             index = index + 1
@@ -50,7 +58,7 @@ async def connect_from_csv(input_file, limit, log):
             )
         except:
             if ('404' in driver.current_url):
-                link = row['ProfileUrl']
+                link = row['profile_url']
                 await log.write(f'Page {link} doesn\'t exist')
                 time.sleep(45)
                 index = index + 1
@@ -85,7 +93,8 @@ async def connect_from_csv(input_file, limit, log):
             print(f'Connected {full_name}')
             
             async with connection.transaction():
-                link = row['ProfileUrl']
+                link = str(row['profile_url'])
+                full_name = str(row['full_name'])
                 # Call stored procedure to insert into "already_connected_profiles" table
                 await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
@@ -172,10 +181,8 @@ def constructDriver(headless = False):
 async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'ConnectLeads')  
     await log.write('Function started')
-    with open('connect.csv', newline='', encoding="utf8") as csvfile: 
-        reader = list(csv.DictReader(csvfile))
-        await connect_from_csv(reader, 150, log)
-        await log.write('Function quit')
+    await connect_from_csv(50, log)
+    await log.write('Function quit')
 
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
