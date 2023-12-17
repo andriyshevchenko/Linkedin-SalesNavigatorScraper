@@ -35,8 +35,13 @@ async def connect_from_csv(limit, log):
     index = 0
     while index < len(inputs):
         row = inputs[index]
+
+        await log.write(f'-- Making a web request --')
+
         driver.get(row['profile_url'])
         print(driver.current_url)
+
+        await log.write(f'-- Waiting for page to load --')
        
         WebDriverWait(driver=driver, timeout=60).until(
             EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
@@ -52,6 +57,8 @@ async def connect_from_csv(limit, log):
         connect_button = None
         try:
             # Connect
+            await log.write(f'-- Waiting for connect button to appear --')
+
             print('Connect')
             connect_button = WebDriverWait(driver=driver, timeout=10).until(
                 EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
@@ -67,13 +74,14 @@ async def connect_from_csv(limit, log):
         try:
             actions = ActionChains(driver)
             if (connect_button is None):
+                await log.write(f'-- Waiting for pop up menu to appear --')
+
                 # More -> Connect    
                 print('More -> Connect')
                 # Initialize ActionChains
                 button_more = WebDriverWait(driver=driver, timeout=60).until(
                     EC.presence_of_element_located((By.XPATH, '(.//button[@aria-label="More actions"])[last()]'))
                 )           
-                # Right-click or hover over the trigger element to reveal the context menu
                 actions.move_to_element(button_more).perform()
                 actions.click(button_more).perform()
                 time.sleep(random.uniform(5.0, 10.0))
@@ -85,8 +93,11 @@ async def connect_from_csv(limit, log):
             time.sleep(random.uniform(5.0, 10.0))
             actions.move_to_element(connect_button)
             actions.click(connect_button).perform()
+
+            await log.write(f'-- Waiting for submit button to appear --')
+
             submit_button = WebDriverWait(driver=driver, timeout=60).until(
-                    EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
+                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
             )
             time.sleep(random.uniform(5.0, 10.0))
             submit_button.click()
@@ -110,7 +121,9 @@ async def connect_from_csv(limit, log):
             message = traceback.format_exception(error)
             await log.write(f'Uknown error.\n\nLink\n\n{link}\nDebugging information:\n__{message}__')
             index = index + 1
-        
+        finally:
+            await log.write(f'-- Waiting --')
+
         time.sleep(45)
         
     driver.quit()
