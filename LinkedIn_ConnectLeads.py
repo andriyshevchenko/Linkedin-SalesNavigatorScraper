@@ -36,6 +36,8 @@ async def connect_from_csv(limit, log):
     while index < len(inputs):
         row = inputs[index]
 
+        await log.write(f'Leads processed: {index}')
+        
         await log.write(f'-- Making a web request --')
 
         driver.get(row['profile_url'])
@@ -111,11 +113,6 @@ async def connect_from_csv(limit, log):
 
             await log.write(f'Connected {full_name}')
             index = index + 1
-        except InterfaceError as error:
-            print(error)
-            message = traceback.format_exception(error)
-            await log.write(f'SQL Error\n\nDebugging information:\n__{message}__')
-            connection = await getConnection()
         except Exception as error:
             print(error)
             message = traceback.format_exception(error)
