@@ -98,6 +98,12 @@ async def connect_from_csv(limit, log):
 
             await log.write(f'-- Waiting for submit button to appear --')
 
+            if len(driver.find_elements(By.XPATH, '//*[text()[contains(., "To verify this member knows you, please enter their email to connect. You can also include a personal note.")]]')) > 0:
+                await log.write(f'Email Address Needed for an Invitation of {full_name}. skipping')
+                time.sleep(45)
+                index = index + 1
+                continue
+
             submit_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
             )
