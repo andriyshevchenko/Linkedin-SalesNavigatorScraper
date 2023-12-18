@@ -27,7 +27,9 @@ async def connect_from_csv(limit, log):
         FROM connected_profiles pp
         LEFT JOIN already_connected_profiles acp
             ON pp.profile_url = acp.profile_url
-        WHERE acp.profile_url IS NULL
+        LEFT JOIN broken_linkedin_profiles bp
+            ON pp.profile_url = bp.profile_url
+        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL
         LIMIT $1;""", limit)
 
     await log.write('Successfully started scraper')
@@ -51,6 +53,13 @@ async def connect_from_csv(limit, log):
         full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
 
         if len(driver.find_elements(By.XPATH, '//main//*[contains(@aria-label, "Invite") and contains(@aria-label, "to connect")]')) == 0:
+            
+            async with connection.transaction():
+                link = str(row['profile_url'])
+                full_name = str(row['full_name'])
+                # Call stored procedure to insert into "already_connected_profiles" table
+                await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
+
             await log.write(f'Already connected {full_name}. skipping')
             time.sleep(45)
             index = index + 1
@@ -68,6 +77,12 @@ async def connect_from_csv(limit, log):
         except:
             if ('404' in driver.current_url):
                 link = row['profile_url']
+
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "broken_links" table
+                    await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+
                 await log.write(f'Page {link} doesn\'t exist')
                 time.sleep(45)
                 index = index + 1
@@ -99,6 +114,12 @@ async def connect_from_csv(limit, log):
             await log.write(f'-- Waiting for submit button to appear --')
 
             if len(driver.find_elements(By.XPATH, '//*[text()[contains(., "To verify this member knows you, please enter their email to connect. You can also include a personal note.")]]')) > 0:
+                link = row['profile_url']
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "broken_links" table
+                    await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+                
                 await log.write(f'Email Address Needed for an Invitation of {full_name}. skipping')
                 time.sleep(45)
                 index = index + 1
