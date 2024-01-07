@@ -30,6 +30,7 @@ async def connect_from_csv(limit, log):
         LEFT JOIN broken_linkedin_profiles bp
             ON pp.profile_url = bp.profile_url
         WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL
+        ORDER BY random()
         LIMIT $1;""", limit)
 
     await log.write('Successfully started scraper')
