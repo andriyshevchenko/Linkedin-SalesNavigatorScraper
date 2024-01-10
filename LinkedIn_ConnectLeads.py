@@ -19,6 +19,13 @@ import traceback
 import asyncpg
 import asyncpg.exceptions
 
+invite_message_template = """Hello {recepient},
+I hope this message finds you in good spirits.
+I'm interested in connecting with professionals like yourself to broaden my network and gain insights into industry trends.
+
+Best regards,
+Andriy Shevchenko"""
+
 async def connect_from_csv(limit, log):
     driver = constructDriver(True)
     connection = await getConnection()
@@ -29,7 +36,9 @@ async def connect_from_csv(limit, log):
             ON pp.profile_url = acp.profile_url
         LEFT JOIN broken_linkedin_profiles bp
             ON pp.profile_url = bp.profile_url
-        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL
+        LEFT JOIN broken_links bl
+            ON pp.profile_url = bl.sales_navigator_profile_url
+        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
         ORDER BY random()
         LIMIT $1;""", limit)
 
@@ -48,6 +57,10 @@ async def connect_from_csv(limit, log):
 
         await log.write(f'-- Waiting for page to load --')
        
+        WebDriverWait(driver=driver, timeout=60).until(
+            EC.presence_of_element_located((By.XPATH, '//main'))
+        )     
+
         WebDriverWait(driver=driver, timeout=60).until(
             EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
         )           
@@ -91,6 +104,27 @@ async def connect_from_csv(limit, log):
 
         try:
             actions = ActionChains(driver)
+
+            connections_number_span = WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, '//main//span[@class="t-bold"]'))
+            )           
+
+            actions.move_to_element(connections_number_span).perform()
+            
+            connections_number = int(connections_number_span.text.strip('+'))
+
+            if (connections_number) < 200:
+                link = row['profile_url']
+                async with connection.transaction():
+
+                    # Call stored procedure to insert into "broken_links" table
+                    await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+
+                await log.write(f'Too little connections: {connections_number}. Skipping')
+                time.sleep(45)
+                index = index + 1
+                continue
+
             if (connect_button is None):
                 await log.write(f'-- Waiting for pop up menu to appear --')
 
@@ -125,6 +159,21 @@ async def connect_from_csv(limit, log):
                 time.sleep(45)
                 index = index + 1
                 continue
+
+            add_note_button = WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view mr1"]'))
+            )
+            time.sleep(random.uniform(5.0, 10.0))
+            add_note_button.click()
+
+            invitation_message = invite_message_template.format(recepient = full_name.split(' ')[0])
+
+            text_area = WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.ID,'custom-message'))
+            )
+            text_area.send_keys(invitation_message)
+
+            await log.write(f'-- Added personal note --')
 
             submit_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
