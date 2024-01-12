@@ -24,14 +24,14 @@ import asyncpg.exceptions
 async def scrap_from_sql(log, limit: int):
     driver = constructDriver(True)
     connection = await getConnection()
-    current_lead_index = int(await connection.fetchval('SELECT COUNT(*) FROM connected_profiles'))
-    remaining_profiles_number = int(await connection.fetchval('SELECT COUNT(*) FROM current_working_copy'))
+    current_lead_index = int(await connection.fetchval('SELECT COUNT(*) FROM architect_linkedin_profiles'))
+    remaining_profiles_number = int(await connection.fetchval('SELECT COUNT(*) FROM working_copy_architect'))
     await log.write(f'There are {current_lead_index} processed profiles. Continue')
     index = 0
     start_time = datetime.now()
     while index < min(limit, remaining_profiles_number):
         try:
-            row = await connection.fetchrow('SELECT * FROM current_working_copy LIMIT 1')
+            row = await connection.fetchrow('SELECT * FROM working_copy_architect LIMIT 1')
             link = row['sales_navigator_profile_url']
             
             if math.floor((datetime.now() - start_time).total_seconds() / 3600) == 2:
@@ -58,8 +58,8 @@ async def scrap_from_sql(log, limit: int):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
 
-                    # Delete top row from "current_working_copy" table
-                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+                    # Delete top row from "working_copy_architect" table
+                    await connection.execute('DELETE FROM working_copy_architect WHERE sales_navigator_profile_url = $1', link)
 
                 index = index + 1
                 continue
@@ -89,11 +89,11 @@ async def scrap_from_sql(log, limit: int):
 
                 async with connection.transaction():
 
-                    # Call stored procedure to insert into "connected_profiles" table
-                    await connection.execute('INSERT INTO connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', linkedin_url, full_name)
+                    # Call stored procedure to insert into "architect_linkedin_profiles" table
+                    await connection.execute('INSERT INTO architect_linkedin_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', linkedin_url, full_name)
 
-                    # Delete top row from "current_working_copy" table
-                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+                    # Delete top row from "working_copy_architect" table
+                    await connection.execute('DELETE FROM working_copy_architect WHERE sales_navigator_profile_url = $1', link)
 
                 index = index + 1
 
@@ -110,8 +110,8 @@ async def scrap_from_sql(log, limit: int):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_links (sales_navigator_profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
 
-                    # Delete top row from "current_working_copy" table
-                    await connection.execute('DELETE FROM current_working_copy WHERE sales_navigator_profile_url = $1', link)
+                    # Delete top row from "working_copy_architect" table
+                    await connection.execute('DELETE FROM working_copy_architect WHERE sales_navigator_profile_url = $1', link)
 
                 index = index + 1
         except InterfaceError as error:
@@ -130,7 +130,7 @@ async def scrap_from_sql(log, limit: int):
             print('Waiting...')
             time.sleep(45)   
 
-            impacted_profiles_number = remaining_profiles_number - int(await connection.fetchval('SELECT COUNT(*) FROM current_working_copy'))
+            impacted_profiles_number = remaining_profiles_number - int(await connection.fetchval('SELECT COUNT(*) FROM working_copy_architect'))
             await log.write(f'Processed profiles: {impacted_profiles_number}')
         
     driver.quit()
