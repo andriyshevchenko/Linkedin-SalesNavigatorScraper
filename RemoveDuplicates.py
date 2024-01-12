@@ -2,8 +2,8 @@ import pandas as pd
 from datetime import date
 
 if __name__ == '__main__':
-    file_name = "links.csv"
-    file_name_output = f"links {date.today()}.csv"
+    file_name = "architect.csv"
+    file_name_output = f"acrhitect {date.today()}.csv"
 
     df = pd.read_csv(file_name)
 
