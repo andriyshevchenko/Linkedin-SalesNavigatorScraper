@@ -6,7 +6,7 @@ from telegram import Bot
 import asyncio
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'export_connected_profiles')  
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'export_connected_profiles')  
     await log.write('Function started')
     
     # Establish a connection to the PostgreSQL database

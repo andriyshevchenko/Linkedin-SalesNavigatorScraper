@@ -74,7 +74,7 @@ def constructDriver(headless = False):
     return driver
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'DisconnectLeads')  
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'DisconnectLeads')  
     await log.write('Function started')
     driver = constructDriver(True)
     await log.write('Successfully started scraper')

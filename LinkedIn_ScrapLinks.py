@@ -39,7 +39,7 @@ def scrap_from_url(driver,url=None):
                 driver.get(url.format(number_page))
                 time.sleep(5)
                 height = 0
-                remaining_results = driver.find_element(By.XPATH, './/div[@class="t-14 flex align-items-center mlA pl3"]/span').text.strip().split(' ')[0]
+                remaining_results = driver.find_element(By.XPATH, './/div[@class="t-14 flex align-items-center mlA pl3"]//span').text.strip().split(' ')[0]
                 container = driver.find_element(By.XPATH, './/div[@class="_vertical-scroll-results_1od37d"]')
                 while height < driver.execute_script("return arguments[0].scrollHeight", container):
                     height += 20
@@ -48,7 +48,7 @@ def scrap_from_url(driver,url=None):
 
                 page_links = list(map(
                     lambda a: { 'ProfileUrl': a.get_attribute('href') },
-                    driver.find_elements(By.XPATH, './/div[@class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view"]/a')))
+                    driver.find_elements(By.XPATH, './/div[@class="artdeco-entity-lockup__image artdeco-entity-lockup__image--type-circle ember-view"]//a')))
                 fc.writerows(page_links)
                 output_file.flush()
                 print(page_links)

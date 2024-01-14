@@ -19,7 +19,7 @@ import traceback
 import asyncpg
 import asyncpg.exceptions
 
-invite_message_template = """Hello {recepient},
+invite_message_template = """Hello,
 I hope this message finds you in good spirits.
 I'm interested in connecting with professionals like yourself to broaden my network and gain insights into industry trends.
 
@@ -40,7 +40,21 @@ async def connect_from_csv(limit, log):
             ON pp.profile_url = bl.sales_navigator_profile_url
         WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
         ORDER BY random()
-        LIMIT $1;""", limit)
+        LIMIT $1 / 2
+        
+        UNION
+                                    
+        SELECT pp.profile_url, pp.full_name
+        FROM architect_linkedin_profiles pp
+        LEFT JOIN already_connected_profiles acp
+            ON pp.profile_url = acp.profile_url
+        LEFT JOIN broken_linkedin_profiles bp
+            ON pp.profile_url = bp.profile_url
+        LEFT JOIN broken_links bl
+            ON pp.profile_url = bl.sales_navigator_profile_url
+        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
+        ORDER BY random()
+        LIMIT $1 / 2;""", limit)
 
     await log.write('Successfully started scraper')
     await log.write(f'remaining number of lines: {len(inputs)}')
@@ -166,7 +180,7 @@ async def connect_from_csv(limit, log):
             time.sleep(random.uniform(5.0, 10.0))
             add_note_button.click()
 
-            invitation_message = invite_message_template.format(recepient = full_name.split(' ')[0])
+            invitation_message = invite_message_template.format(recepient = full_name)
 
             text_area = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.ID,'custom-message'))
@@ -266,7 +280,7 @@ def constructDriver(headless = False):
                 raise error
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'ConnectLeads')  
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
     await log.write('Function started')
     await connect_from_csv(50, log)
     await log.write('Function quit')

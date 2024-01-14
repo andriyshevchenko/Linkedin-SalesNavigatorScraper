@@ -183,7 +183,7 @@ def constructDriver(headless = False):
     return driver
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1001801037236', 'GetNormalProfileUrl')  
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
     await scrap_from_sql(log, 60)
