@@ -16,7 +16,7 @@ from datetime import datetime
 import gc
 from telegram import Bot
 import asyncio
-from TelegramLog import TelegramLog
+from TelegramLog import TelegramLog, NullLog
 import traceback
 import asyncpg
 import asyncpg.exceptions
@@ -183,7 +183,7 @@ def constructDriver(headless = False):
     return driver
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'GetNormalProfileUrl')  
+    log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'GetNormalProfileUrl')  
     await log.write('Function started')
         
     await scrap_from_sql(log, 67)

@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import pathlib 
 import random
-from TelegramLog import TelegramLog
+from TelegramLog import TelegramLog, NullLog
 from telegram import Bot
 import asyncio
 import traceback
@@ -284,7 +284,7 @@ def constructDriver(headless = False):
                 raise error
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
+    log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
     await log.write('Function started')
     await connect_from_csv(50, log)
     await log.write('Function quit')

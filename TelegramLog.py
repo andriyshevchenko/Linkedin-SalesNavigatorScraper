@@ -1,6 +1,13 @@
 from telegram import Bot
 from datetime import datetime, timezone
 
+class NullLog:
+    def __init__(self, bot: Bot, chat_id, _function):
+        pass
+    
+    async def write(self, text):
+        pass
+
 class TelegramLog:
     def __init__(self, bot: Bot, chat_id, _function):
         self.bot = bot

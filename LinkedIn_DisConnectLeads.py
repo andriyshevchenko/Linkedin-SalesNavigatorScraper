@@ -10,7 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.core.driver_cache import DriverCacheManager
 import pathlib 
 import random
-from TelegramLog import TelegramLog
+from TelegramLog import TelegramLog, NullLog
 from telegram import Bot
 import asyncio
 
@@ -74,7 +74,7 @@ def constructDriver(headless = False):
     return driver
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'DisconnectLeads')  
+    log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'DisconnectLeads')  
     await log.write('Function started')
     driver = constructDriver(True)
     await log.write('Successfully started scraper')
