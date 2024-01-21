@@ -30,35 +30,43 @@ async def connect_from_csv(limit, log):
     driver = constructDriver(True)
     connection = await getConnection()
     inputs = await connection.fetch("""
-        (
-            SELECT pp.profile_url, pp.full_name
-            FROM connected_profiles pp
-            LEFT JOIN already_connected_profiles acp
-                ON pp.profile_url = acp.profile_url
-            LEFT JOIN broken_linkedin_profiles bp
-                ON pp.profile_url = bp.profile_url
-            LEFT JOIN broken_links bl
-                ON pp.profile_url = bl.sales_navigator_profile_url
-            WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
-            ORDER BY random()
-            LIMIT $1
+        WITH select_architect AS (
+        SELECT pp.profile_url, pp.full_name
+        FROM architect_linkedin_profiles pp
+        LEFT JOIN already_connected_profiles acp
+            ON pp.profile_url = acp.profile_url
+        LEFT JOIN broken_linkedin_profiles bp
+            ON pp.profile_url = bp.profile_url
+        LEFT JOIN broken_links bl
+            ON pp.profile_url = bl.sales_navigator_profile_url
+        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
+        ORDER BY random()
+        LIMIT $1
+    ),
+    
+    select_ceo AS (
+        SELECT pp.profile_url, pp.full_name
+        FROM connected_profiles pp
+        LEFT JOIN already_connected_profiles acp
+            ON pp.profile_url = acp.profile_url
+        LEFT JOIN broken_linkedin_profiles bp
+            ON pp.profile_url = bp.profile_url
+        LEFT JOIN broken_links bl
+            ON pp.profile_url = bl.sales_navigator_profile_url
+        WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
+        ORDER BY random()
+        LIMIT (
+            SELECT CASE 
+                WHEN count(*) < $1 THEN 2 * $1 - count(*) 
+                ELSE $1 
+            END 
+            FROM select_architect
         )
-        
-        UNION
-                                    
-        (
-            SELECT pp.profile_url, pp.full_name
-            FROM architect_linkedin_profiles pp
-            LEFT JOIN already_connected_profiles acp
-                ON pp.profile_url = acp.profile_url
-            LEFT JOIN broken_linkedin_profiles bp
-                ON pp.profile_url = bp.profile_url
-            LEFT JOIN broken_links bl
-                ON pp.profile_url = bl.sales_navigator_profile_url
-            WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
-            ORDER BY random()
-            LIMIT $1
-        )""", limit/ 2)
+    )
+    
+    SELECT * FROM select_ceo
+    UNION
+    SELECT * FROM select_architect;""", limit / 2)
 
     await log.write('Successfully started scraper')
     await log.write(f'remaining number of lines: {len(inputs)}')
