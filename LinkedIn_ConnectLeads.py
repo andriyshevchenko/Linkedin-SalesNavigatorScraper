@@ -66,12 +66,13 @@ async def connect_from_csv(limit, log):
     
     SELECT * FROM select_ceo
     UNION
-    SELECT * FROM select_architect;""", limit / 2)
+    SELECT * FROM select_architect;""", 500)
 
     await log.write('Successfully started scraper')
     await log.write(f'remaining number of lines: {len(inputs)}')
     index = 0
-    while index < len(inputs):
+    items_connected = 0
+    while items_connected < limit and index < len(inputs):
         row = inputs[index]
 
         await log.write(f'Leads processed: {index}')
@@ -215,6 +216,7 @@ async def connect_from_csv(limit, log):
                 await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
             await log.write(f'Connected {full_name}')
+            items_connected = items_connected + 1
             index = index + 1
         except Exception as error:
             print(error)
@@ -294,7 +296,7 @@ def constructDriver(headless = False):
 async def main():
     log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
     await log.write('Function started')
-    await connect_from_csv(60, log)
+    await connect_from_csv(50, log)
     await log.write('Function quit')
 
 if __name__ == '__main__':
