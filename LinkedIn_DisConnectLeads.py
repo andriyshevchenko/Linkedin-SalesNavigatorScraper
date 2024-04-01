@@ -81,11 +81,16 @@ async def main():
     driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
     time.sleep(random.uniform(5.0, 10.0))
     perform_scroll_to_bottom(driver)
-    WebDriverWait(driver=driver, timeout=60).until(
-        EC.presence_of_element_located((By.XPATH,'.//ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]'))
-    )
-    number_pages = len(list(driver.find_elements(By.XPATH, './/ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]/descendant::li')))
-    pages = list(map(lambda number: f'https://www.linkedin.com/mynetwork/invitation-manager/sent?page={number}', range(1, number_pages+1)))
+    pages = ['https://www.linkedin.com/mynetwork/invitation-manager/sent?page=1']
+    number_pages = 1
+    try:
+        WebDriverWait(driver=driver, timeout=60).until(
+            EC.presence_of_element_located((By.XPATH,'.//ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]'))
+        )
+        number_pages = len(list(driver.find_elements(By.XPATH, './/ul[@class="artdeco-pagination__pages artdeco-pagination__pages--number"]/descendant::li')))
+        pages = list(map(lambda number: f'https://www.linkedin.com/mynetwork/invitation-manager/sent?page={number}', range(1, number_pages+1)))
+    except:
+        pass
     await log.write(f'There are {number_pages} pages. Withdrawing requests...')
     for page in pages:
         driver.get(page)
