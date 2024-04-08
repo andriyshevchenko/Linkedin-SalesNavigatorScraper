@@ -138,7 +138,7 @@ async def connect_from_csv(limit, log):
 
             actions.move_to_element(connections_number_span).perform()
             
-            connections_number = int(connections_number_span.text.strip('+'))
+            connections_number = int(connections_number_span.text.strip('+').replace(",",""))
 
             if (connections_number) < 100:
                 link = row['profile_url']
