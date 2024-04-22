@@ -296,7 +296,7 @@ def constructDriver(headless = False):
 async def main():
     log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
     await log.write('Function started')
-    await connect_from_csv(50, log)
+    await connect_from_csv(100, log)
     await log.write('Function quit')
 
 if __name__ == '__main__':
