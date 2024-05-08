@@ -21,10 +21,7 @@ import asyncpg.exceptions
 
 invite_message_template = """Hello,
 I hope this message finds you in good spirits.
-I'm interested in connecting with professionals like yourself to broaden my network and gain insights into industry trends.
-
-Best regards,
-Andriy Shevchenko"""
+I'm interested in connecting with professionals like yourself to broaden my network and gain insights into industry trends."""
 
 async def connect_from_csv(limit, log):
     driver = constructDriver(True)
@@ -221,7 +218,7 @@ async def connect_from_csv(limit, log):
         except Exception as error:
             print(error)
             message = traceback.format_exception(error)
-            await log.write(f'Uknown error.\n\nLink\n\n{link}\nDebugging information:\n__{message}__')
+            await log.write(f'Uknown error.\n\nDebugging information:\n__{message}__')
             index = index + 1
         finally:
             await log.write(f'-- Waiting --')
