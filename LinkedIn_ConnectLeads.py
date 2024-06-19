@@ -184,21 +184,6 @@ async def connect_from_csv(limit, log):
                 index = index + 1
                 continue
 
-            add_note_button = WebDriverWait(driver=driver, timeout=60).until(
-                EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--secondary ember-view mr1"]'))
-            )
-            time.sleep(random.uniform(5.0, 10.0))
-            add_note_button.click()
-
-            invitation_message = invite_message_template.format(recepient = full_name)
-
-            text_area = WebDriverWait(driver=driver, timeout=60).until(
-                EC.presence_of_element_located((By.ID,'custom-message'))
-            )
-            text_area.send_keys(invitation_message)
-
-            await log.write(f'-- Added personal note --')
-
             submit_button = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.XPATH, './/button[@class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view ml1"]'))
             )
