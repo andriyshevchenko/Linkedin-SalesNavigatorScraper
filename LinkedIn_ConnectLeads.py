@@ -19,10 +19,6 @@ import traceback
 import asyncpg
 import asyncpg.exceptions
 
-invite_message_template = """Hello,
-I hope this message finds you in good spirits.
-I'm interested in connecting with professionals like yourself to broaden my network and gain insights into industry trends."""
-
 async def connect_from_csv(limit, log):
     driver = constructDriver(True)
     connection = await getConnection()
@@ -278,7 +274,7 @@ def constructDriver(headless = False):
 async def main():
     log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
     await log.write('Function started')
-    await connect_from_csv(100, log)
+    await connect_from_csv(40, log)
     await log.write('Function quit')
 
 if __name__ == '__main__':
