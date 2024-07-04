@@ -61,22 +61,14 @@ async def connect_from_csv(limit, log):
     UNION
     SELECT * FROM select_architect;""", 500)
 
-    await log.write('Successfully started scraper')
-    await log.write(f'remaining number of lines: {len(inputs)}')
     index = 0
     items_connected = 0
     while items_connected < limit and index < len(inputs):
         row = inputs[index]
 
-        await log.write(f'Leads processed: {index}')
-        
-        await log.write(f'-- Making a web request --')
-
         driver.get(row['profile_url'])
         print(driver.current_url)
 
-        await log.write(f'-- Waiting for page to load --')
-       
         WebDriverWait(driver=driver, timeout=60).until(
             EC.presence_of_element_located((By.XPATH, '//main'))
         )     
@@ -94,7 +86,6 @@ async def connect_from_csv(limit, log):
                 # Call stored procedure to insert into "already_connected_profiles" table
                 await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
-            await log.write(f'Already connected {full_name}. skipping')
             time.sleep(45)
             index = index + 1
             continue
@@ -102,8 +93,7 @@ async def connect_from_csv(limit, log):
         connect_button = None
         try:
             # Connect
-            await log.write(f'-- Waiting for connect button to appear --')
-
+ 
             print('Connect')
             connect_button = WebDriverWait(driver=driver, timeout=10).until(
                 EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
@@ -117,7 +107,6 @@ async def connect_from_csv(limit, log):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
 
-                await log.write(f'Page {link} doesn\'t exist')
                 time.sleep(45)
                 index = index + 1
                 continue
@@ -140,13 +129,11 @@ async def connect_from_csv(limit, log):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
 
-                await log.write(f'Too little connections: {connections_number}. Skipping')
                 time.sleep(45)
                 index = index + 1
                 continue
 
             if (connect_button is None):
-                await log.write(f'-- Waiting for pop up menu to appear --')
 
                 # More -> Connect    
                 print('More -> Connect')
@@ -166,8 +153,6 @@ async def connect_from_csv(limit, log):
             actions.move_to_element(connect_button)
             actions.click(connect_button).perform()
 
-            await log.write(f'-- Waiting for submit button to appear --')
-
             if len(driver.find_elements(By.XPATH, '//*[text()[contains(., "To verify this member knows you, please enter their email to connect. You can also include a personal note.")]]')) > 0:
                 link = row['profile_url']
                 async with connection.transaction():
@@ -175,7 +160,6 @@ async def connect_from_csv(limit, log):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
                 
-                await log.write(f'Email Address Needed for an Invitation of {full_name}. skipping')
                 time.sleep(45)
                 index = index + 1
                 continue
@@ -193,7 +177,6 @@ async def connect_from_csv(limit, log):
                 # Call stored procedure to insert into "already_connected_profiles" table
                 await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
-            await log.write(f'Connected {full_name}')
             items_connected = items_connected + 1
             index = index + 1
         except Exception as error:
@@ -202,9 +185,7 @@ async def connect_from_csv(limit, log):
             await log.write(f'Uknown error.\n\nDebugging information:\n__{message}__')
             index = index + 1
         finally:
-            await log.write(f'-- Waiting --')
-
-        time.sleep(45)
+            time.sleep(45)
         
     driver.quit()
     connection.close()
@@ -272,11 +253,11 @@ def constructDriver(headless = False):
                 raise error
 
 async def main():
-    log = NullLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
-    await log.write('Function started')
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
+    await log.write(f'-- Waiting --')
+    
     await connect_from_csv(150, log)
-    await log.write('Function quit')
-
+    
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
