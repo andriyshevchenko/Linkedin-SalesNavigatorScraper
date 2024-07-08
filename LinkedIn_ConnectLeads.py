@@ -253,7 +253,7 @@ def constructDriver(headless = False):
                 raise error
 
 async def main():
-    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-1002098033156', 'ConnectLeads')  
+    log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-4285963517', 'ConnectLeads')  
     await log.write(f'-- Waiting --')
     
     await connect_from_csv(150, log)
