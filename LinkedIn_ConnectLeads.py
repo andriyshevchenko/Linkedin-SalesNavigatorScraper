@@ -2,7 +2,6 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import time
-import csv
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -20,7 +19,7 @@ import asyncpg
 import asyncpg.exceptions
 
 async def connect_from_csv(limit, log):
-    driver = constructDriver(True)
+    driver = await constructDriver(log, True)
     connection = await getConnection()
     inputs = await connection.fetch("""
         WITH select_architect AS (
@@ -64,54 +63,54 @@ async def connect_from_csv(limit, log):
     index = 0
     items_connected = 0
     while items_connected < limit and index < len(inputs):
-        row = inputs[index]
-
-        driver.get(row['profile_url'])
-        print(driver.current_url)
-
-        WebDriverWait(driver=driver, timeout=60).until(
-            EC.presence_of_element_located((By.XPATH, '//main'))
-        )     
-
-        WebDriverWait(driver=driver, timeout=60).until(
-            EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
-        )           
-        full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
-
-        if len(driver.find_elements(By.XPATH, '//main//*[contains(@aria-label, "Invite") and contains(@aria-label, "to connect")]')) == 0:
-            
-            async with connection.transaction():
-                link = str(row['profile_url'])
-                full_name = str(row['full_name'])
-                # Call stored procedure to insert into "already_connected_profiles" table
-                await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
-
-            time.sleep(45)
-            index = index + 1
-            continue
-
-        connect_button = None
         try:
-            # Connect
- 
-            print('Connect')
-            connect_button = WebDriverWait(driver=driver, timeout=10).until(
-                EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
-            )
-        except:
-            if ('404' in driver.current_url):
-                link = row['profile_url']
+            row = inputs[index]
+
+            driver.get(row['profile_url'])
+            print(driver.current_url)
+
+            WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, '//main'))
+            )     
+
+            WebDriverWait(driver=driver, timeout=60).until(
+                EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
+            )           
+            full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
+
+            if len(driver.find_elements(By.XPATH, '//main//*[contains(@aria-label, "Invite") and contains(@aria-label, "to connect")]')) == 0:
 
                 async with connection.transaction():
-
-                    # Call stored procedure to insert into "broken_links" table
-                    await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+                    link = str(row['profile_url'])
+                    full_name = str(row['full_name'])
+                    # Call stored procedure to insert into "already_connected_profiles" table
+                    await connection.execute('INSERT INTO already_connected_profiles (profile_url, full_name) VALUES ($1, $2) ON CONFLICT DO NOTHING', link, full_name)
 
                 time.sleep(45)
                 index = index + 1
                 continue
 
-        try:
+            connect_button = None
+            try:
+                # Connect
+    
+                print('Connect')
+                connect_button = WebDriverWait(driver=driver, timeout=10).until(
+                    EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
+                )
+            except:
+                if ('404' in driver.current_url):
+                    link = row['profile_url']
+
+                    async with connection.transaction():
+
+                        # Call stored procedure to insert into "broken_links" table
+                        await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
+
+                    time.sleep(45)
+                    index = index + 1
+                    continue
+
             actions = ActionChains(driver)
 
             connections_number_span = WebDriverWait(driver=driver, timeout=60).until(
@@ -119,7 +118,7 @@ async def connect_from_csv(limit, log):
             )           
 
             actions.move_to_element(connections_number_span).perform()
-            
+
             connections_number = int(connections_number_span.text.strip('+').replace(",",""))
 
             if (connections_number) < 100:
@@ -129,12 +128,11 @@ async def connect_from_csv(limit, log):
                     # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
 
-                time.sleep(45)
-                index = index + 1
-                continue
+                    time.sleep(45)
+                    index = index + 1
+                    continue
 
             if (connect_button is None):
-
                 # More -> Connect    
                 print('More -> Connect')
                 # Initialize ActionChains
@@ -157,9 +155,9 @@ async def connect_from_csv(limit, log):
                 link = row['profile_url']
                 async with connection.transaction():
 
-                    # Call stored procedure to insert into "broken_links" table
+                        # Call stored procedure to insert into "broken_links" table
                     await connection.execute('INSERT INTO broken_linkedin_profiles (profile_url) VALUES ($1) ON CONFLICT DO NOTHING', link)
-                
+
                 time.sleep(45)
                 index = index + 1
                 continue
@@ -170,7 +168,7 @@ async def connect_from_csv(limit, log):
             time.sleep(random.uniform(5.0, 10.0))
             submit_button.click()
             print(f'Connected {full_name}')
-            
+
             async with connection.transaction():
                 link = str(row['profile_url'])
                 full_name = str(row['full_name'])
@@ -179,6 +177,7 @@ async def connect_from_csv(limit, log):
 
             items_connected = items_connected + 1
             index = index + 1
+            
         except Exception as error:
             print(error)
             message = traceback.format_exception(error)
@@ -186,7 +185,6 @@ async def connect_from_csv(limit, log):
             index = index + 1
         finally:
             time.sleep(45)
-        
     driver.quit()
     connection.close()
 
@@ -199,7 +197,7 @@ async def getConnection():
         password='lUwm8vS21jLW'
     )
 
-def constructDriver(headless = False):
+async def constructDriver(log, headless = False):
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -248,13 +246,13 @@ def constructDriver(headless = False):
             driver.switch_to.window(driver.current_window_handle)
             return driver
         except Exception as error:
+            await log.write('Login error')
             if attempts == 3:
                 driver.quit()
                 raise error
 
 async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-4285963517', 'ConnectLeads')  
-    await log.write(f'-- Waiting --')
     
     await connect_from_csv(1000, log)
     
