@@ -250,7 +250,7 @@ async def constructDriver(log, headless = False):
 async def main():
     log = TelegramLog(Bot(token='6464053578:AAGbooTDuVCdiYqMhN2akhMMEJI0wVZSr7k'), '-4285963517', 'ConnectLeads')  
     
-    await connect_from_csv(1000, log)
+    await connect_from_csv(7, log)
     
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
