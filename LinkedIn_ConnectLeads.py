@@ -70,10 +70,6 @@ async def connect_from_csv(limit, log):
             print(driver.current_url)
 
             WebDriverWait(driver=driver, timeout=60).until(
-                EC.presence_of_element_located((By.XPATH, '//main'))
-            )     
-
-            WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.XPATH, './/button[@aria-label="More actions"]'))
             )           
             full_name = driver.find_element(By.XPATH, './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]').text.strip()
