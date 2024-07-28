@@ -177,7 +177,8 @@ async def connect_from_csv(limit, log):
         except Exception as error:
             row = inputs[index]
             message = traceback.format_exception(error)
-            await log.write(f'Uknown error.\n\nProfile: {row['profile_url']}\n\nDebugging information:\n__{message}__')
+            current_profile = row['profile_url']
+            await log.write(f'Uknown error.\n\nProfile: {current_profile}\n\nDebugging information:\n__{message}__')
             index = index + 1
         finally:
             time.sleep(45)
