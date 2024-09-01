@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: my_python_app
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    depends_on:
+      - vpn
+    networks:
+      - mynetwork
+
+  vpn:
+    image: dperson/openvpn-client
+    container_name: openvpn-client
+    volumes:
+      - ./myvpn.ovpn:/vpn/config.ovpn
+    cap_add:
+      - NET_ADMIN
+    command: '-f /vpn/config.ovpn'
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
