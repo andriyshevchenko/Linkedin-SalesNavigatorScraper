@@ -1,3 +1,5 @@
+import os
+import platform
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
@@ -94,6 +96,9 @@ async def connect_from_csv(limit, log):
                 connect_button = WebDriverWait(driver=driver, timeout=10).until(
                     EC.presence_of_element_located((By.XPATH, './/button[contains(@class, "artdeco-button artdeco-button--2 artdeco-button--primary ember-view pvs-profile-actions__action") and contains(., "Connect")]'))
                 )
+                if connect_button is not None:
+                    print('Connect button found') 
+                
             except:
                 if ('404' in driver.current_url):
                     link = row['profile_url']
@@ -108,16 +113,23 @@ async def connect_from_csv(limit, log):
                     continue
 
             actions = ActionChains(driver)
-
+            
+            print('Finding connections_number_span')
+            
             connections_number_span = WebDriverWait(driver=driver, timeout=60).until(
                 EC.presence_of_element_located((By.XPATH, '//main//span[@class="t-bold"]'))
             )           
+            print('Executing move_to_element(connections_number_span)')
 
             actions.move_to_element(connections_number_span).perform()
+            
+            print('Finding connections_number')
 
             connections_number = int(connections_number_span.text.strip('+').replace(",",""))
 
-            if (connections_number) < 100:
+            print('Found connections_number')
+            
+            if (connections_number) < 50:
                 link = row['profile_url']
                 async with connection.transaction():
 
@@ -144,6 +156,8 @@ async def connect_from_csv(limit, log):
                 ) 
 
             time.sleep(random.uniform(5.0, 10.0))
+            
+            print('Pressing Connect button')
             actions.move_to_element(connect_button)
             actions.click(connect_button).perform()
 
@@ -176,7 +190,7 @@ async def connect_from_csv(limit, log):
             
         except Exception as error:
             row = inputs[index]
-            message = traceback.format_exception(error)
+            message = traceback.format_exc()
             current_profile = row['profile_url']
             await log.write(f'Uknown error.\n\nProfile: {current_profile}\n\nDebugging information:\n__{message}__')
             index = index + 1
@@ -209,9 +223,21 @@ async def constructDriver(log, headless = False):
             "prefs", {"profile.managed_default_content_settings.images": 2})
     options.add_argument("--disable-gpu")
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
-    cache_manager = DriverCacheManager(root_dir=pathlib.Path.cwd())
+    
+    driver: any
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager(cache_manager=cache_manager).install(), options=options))
+    if platform.system() == "Windows":
+        cache_manager = DriverCacheManager(root_dir=pathlib.Path.cwd())
+        chrome_install = ChromeDriverManager(cache_manager=cache_manager).install()
+
+        folder = os.path.dirname(chrome_install)
+        chromedriver_path = os.path.join(folder, "chromedriver.exe")
+
+        driver = webdriver.Chrome(service=Service(executable_path=chromedriver_path, options=options))
+    else:
+        service = Service(ChromeDriverManager().install())
+        options = webdriver.ChromeOptions()
+        driver = webdriver.Chrome(service=service, options=options)
 
     attempts = 0
     while True:
@@ -257,7 +283,3 @@ if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     asyncio.run(main())
-
-
-
-
