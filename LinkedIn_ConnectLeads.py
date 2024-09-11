@@ -313,6 +313,9 @@ async def constructDriver(log):
     else:
         await log.write('Running on Linux', logging.INFO)
 
+        if 'DOCKER' in os.environ or 'container' in os.environ:
+            await log.write('Running from Docker', logging.INFO)
+
         options.add_argument("start-maximized")
         options.binary_location = '/usr/bin/google-chrome'
 
@@ -376,9 +379,6 @@ async def constructDriver(log):
             if attempts == 3:
                 driver.quit()
                 raise error
-
-def is_docker():
-    return 'DOCKER' in os.environ or 'container' in os.environ
 
 async def main():
     log = LogByLevel(TelegramLog(Bot(token='7209921522:AAHRhEH11Clg_qBPY9SSwfEJDoPvJ5yso70'), '-1002300475780', 'ConnectLeads'), logging.DEBUG)  
