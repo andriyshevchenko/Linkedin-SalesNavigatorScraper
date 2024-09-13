@@ -1,6 +1,7 @@
 import os
 import platform
 import logging
+import stat
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
@@ -23,10 +24,11 @@ import asyncio
 import asyncpg
 import asyncpg.exceptions
 
-async def connect_from_csv(limit, log):
+async def send_connection_requests(limit, log):
     driver: any
     connection: any
     inputs: any
+    try:
     async with ScopedLog(log) as driverLog:
         driver = await constructDriver(driverLog)
     
@@ -258,7 +260,9 @@ async def connect_from_csv(limit, log):
     
                 items_connected = items_connected + 1
                 index = index + 1
-            
+        except asyncio.CancelledError:
+            await log.write('Job was cancelled', logging.WARNING)
+            break
         except Exception as error:
             await log.write(f'Uknown error.\n\n{ErrorLog(error)}', logging.ERROR)
             index = index + 1
@@ -313,15 +317,22 @@ async def constructDriver(log):
     else:
         await log.write('Running on Linux', logging.INFO)
 
-        if 'DOCKER' in os.environ or 'container' in os.environ:
+        if 'DOCKER' in os.environ:
             await log.write('Running from Docker', logging.INFO)
 
         options.add_argument("start-maximized")
         options.binary_location = '/usr/bin/google-chrome'
 
         path = ChromeDriverManager().install().replace('THIRD_PARTY_NOTICES.', '')
-
+        
         await log.write(f'Installed chrome web driver to: {path}', logging.DEBUG)
+        
+        await log.write(f'Setting permission', logging.DEBUG)
+        
+        # Set the file to be executable by the owner, group, and others
+        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |  # Owner
+                       stat.S_IRGRP | stat.S_IXGRP |               # Group
+                       stat.S_IROTH | stat.S_IXOTH)                # Others
 
         service = Service(path)
 
@@ -374,6 +385,10 @@ async def constructDriver(log):
             time.sleep(60)
             driver.switch_to.window(driver.current_window_handle)
             return driver
+        except asyncio.CancelledError:
+            await log.write('Job was cancelled', logging.WARNING)
+            driver.quit()
+            break
         except Exception as error:
             await log.write(f'Login error: \n\n{ErrorLog(error)}', logging.ERROR)
             if attempts == 3:
@@ -383,7 +398,7 @@ async def constructDriver(log):
 async def main():
     log = LogByLevel(TelegramLog(Bot(token='7209921522:AAHRhEH11Clg_qBPY9SSwfEJDoPvJ5yso70'), '-1002300475780', 'ConnectLeads'), logging.DEBUG)  
     await log.write('Starting function ConnectLeads', logging.INFO)
-    await connect_from_csv(150, log)
+    await send_connection_requests(150, log)
     
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
