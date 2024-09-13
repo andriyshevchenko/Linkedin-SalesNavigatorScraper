@@ -36,7 +36,16 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
 # Set the working directory
 WORKDIR /app
 
-ENV DOCKER=1
+ENV ENV_DOCKER=1
+ENV ENV_FUNCTION_NAME=disconnect-leads
+ENV ENV_MAX_ALLOWED_CONNECTION_REQUESTS=150
+ENV ENV_SQL_CONNECTION_LEADS_DB_HOST=159.89.13.130
+ENV ENV_SQL_CONNECTION_LEADS_DB_PORT=5432
+ENV ENV_SQL_CONNECTION_LEADS_DB_NAME=ukraine_it_ceo
+ENV ENV_SQL_CONNECTION_LEADS_DB_USER=Administrator
+ENV ENV_SQL_CONNECTION_LEADS_DB_PASSWORD=lUwm8vS21jLW
+ENV ENV_TELEGRAM_BOT_TOKEN=7209921522:AAHRhEH11Clg_qBPY9SSwfEJDoPvJ5yso70
+ENV ENV_TELEGRAM_CHAT_ID=-1002300475780
 
 # Copy the requirements file into the container
 COPY requirements.txt .
@@ -51,4 +60,4 @@ COPY . .
 # EXPOSE 8080
 
 # Command to run your application
-CMD ["python", "LinkedIn_ConnectLeads.py"]
+CMD ["python", "main.py"]
