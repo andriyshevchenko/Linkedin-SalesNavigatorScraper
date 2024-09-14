@@ -1,5 +1,5 @@
 class SequentialScript:
-    def __init__(self, scripts, log):
+    def __init__(self, log, *scripts):
         self.scripts = scripts
         self.log = log
     

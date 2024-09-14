@@ -1,7 +1,7 @@
 import psycopg2
 from datetime import datetime
 import csv
-from TelegramLog import TelegramLog
+from Logging.TelegramLog import TelegramLog
 from telegram import Bot
 import asyncio
 

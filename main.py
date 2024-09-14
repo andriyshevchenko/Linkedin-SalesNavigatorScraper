@@ -1,19 +1,11 @@
 import logging
 import os
 import platform
-from ConnectScript import ConnectScript
-from DisconnectScript import DisconnectScript
-from FinalScript import FinalScript
-from LinuxEnv import LinuxEnv
-from LogByLevel import LogByLevel
-from LoginScript import LoginScript
-from ScopedLog import ScopedLog
-from SequentialScript import SequentialScript
-from SwitchCaseScript import SwitchCaseScript
-from TelegramLog import TelegramLog
 from telegram import Bot
 import asyncio
-from WindowsEnv import WindowsEnv
+from Env import *
+from Log import *
+from Scripts import *
 
 async def main():
     telegram = LogByLevel(TelegramLog(Bot(token=os.environ['ENV_TELEGRAM_BOT_TOKEN']), os.environ['ENV_TELEGRAM_CHAT_ID'], os.environ['ENV_FUNCTION_NAME']), logging.DEBUG)  
@@ -30,6 +22,7 @@ async def main():
         
         await FinalScript(
             SequentialScript(
+                log,
                 LoginScript(driver, log),
                 SwitchCaseScript(
                     {
@@ -38,8 +31,7 @@ async def main():
                     },
                     os.environ['ENV_FUNCTION_NAME'],
                     log
-                ),
-                log
+                )
             ),
             driver,
             log).perform()

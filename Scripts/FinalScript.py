@@ -1,6 +1,5 @@
 import logging
 
-
 class FinalScript:
     def __init__(self, script, driver, log):
         self.script = script
