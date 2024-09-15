@@ -9,12 +9,6 @@ class SafeScript:
         self.driver = driver
         self.log = log
     
-    def describe(self):
-        return 'SafeScript'
-    
-    def make_copy(self, *args):
-        return SafeScript(*args)
-
     async def perform(self):
         try:
             await self.script.perform(self.log)

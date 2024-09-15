@@ -27,7 +27,7 @@ async def main():
                 SwitchCaseScript(
                     {
                         'disconnect-leads': DisconnectScript(driver, log),
-                        'connect-leads': ConnectScript(driver, log)
+                        'connect-leads': ConnectAllScript(driver, log)
                     },
                     os.environ['ENV_FUNCTION_NAME'],
                     log

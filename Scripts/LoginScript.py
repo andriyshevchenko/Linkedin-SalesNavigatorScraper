@@ -5,8 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import random
-from Logging.ErrorLog import ErrorLog
 import asyncio
+
+from Log import ErrorLog
 
 class LoginScript:
     def __init__(self, driver, log):

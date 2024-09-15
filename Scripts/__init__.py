@@ -1,6 +1,6 @@
 # my_package/__init__.py
 
-from .ConnectScript import ConnectScript
+from .ConnectAllScript import ConnectScript
 from .DisconnectScript import DisconnectScript
 from .FinalScript import FinalScript
 from .LoginScript import LoginScript
@@ -9,4 +9,4 @@ from .SwitchCaseScript import SwitchCaseScript
 from .SafeScript import SafeScript
 
 # Define the public API for the module
-__all__ = ['ConnectScript', 'DisconnectScript', 'FinalScript', 'LoginScript', 'SequentialScript', 'SwitchCaseScript', 'SafeScript']
+__all__ = ['ConnectAllScript', 'DisconnectScript', 'FinalScript', 'LoginScript', 'SequentialScript', 'SwitchCaseScript', 'SafeScript']
