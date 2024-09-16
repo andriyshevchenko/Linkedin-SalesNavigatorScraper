@@ -14,7 +14,7 @@ class LoginScript:
         self.driver = driver
         self.log = log
 
-    async def perform(self):
+    async def perform(self) -> str:
         try:
             await self.log.write('Logging user in', logging.INFO)
             self.driver.get('https://www.linkedin.com/sales')
@@ -46,6 +46,7 @@ class LoginScript:
             time.sleep(60)
 
             self.driver.switch_to.window(self.driver.current_window_handle)
+            return 'Logged in'
         except asyncio.CancelledError:
             await self.log.write('Job was cancelled', logging.WARNING)
             raise

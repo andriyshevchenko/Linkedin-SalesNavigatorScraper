@@ -6,9 +6,9 @@ class FinalScript:
         self.driver = driver
         self.log = log
     
-    async def perform(self):
+    async def perform(self) -> str:
         try:
-            await self.script.perform(self.log)
+            return await self.script.perform(self.log)
         except:
             raise
         finally:

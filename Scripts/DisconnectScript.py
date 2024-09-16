@@ -13,7 +13,7 @@ class DisconnectScript:
         self.driver = driver
         self.log = log
     
-    async def perform(self):
+    async def perform(self) -> str:
         self.driver.get('https://www.linkedin.com/mynetwork/invitation-manager/sent/')
         time.sleep(random.uniform(5.0, 10.0))
         self.perform_scroll_to_bottom(self.driver)
@@ -47,6 +47,7 @@ class DisconnectScript:
                 await self.log.write(f'Withdrawn {len(buttons)} requests', logging.DEBUG)
             except Exception as error:
                 await self.log.write(f'Problem encontered: {ErrorLog(error)}', logging.DEBUG)
+        return 'Leads withdrawn'
 
     def perform_scroll_to_bottom(self):
         height: int = 0

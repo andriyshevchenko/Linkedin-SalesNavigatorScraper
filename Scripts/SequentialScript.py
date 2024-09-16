@@ -6,3 +6,4 @@ class SequentialScript:
     async def perform(self):
         for script in self.scripts:
             await script.perform(self.log)
+        return 'Sequence completed'

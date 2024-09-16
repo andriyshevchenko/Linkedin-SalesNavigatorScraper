@@ -4,5 +4,5 @@ class SwitchCaseScript:
         self.script_name = script_name
         self.log = log
 
-    async def perform(self):
-        await self.scripts[self.script_name].perform(self.log)
+    async def perform(self) -> str:
+        return await self.scripts[self.script_name].perform(self.log)

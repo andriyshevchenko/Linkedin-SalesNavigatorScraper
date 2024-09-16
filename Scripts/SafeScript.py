@@ -9,9 +9,9 @@ class SafeScript:
         self.driver = driver
         self.log = log
     
-    async def perform(self):
+    async def perform(self) -> str:
         try:
-            await self.script.perform(self.log)
+            return await self.script.perform(self.log)
         except asyncio.CancelledError:
             await self.log.write('Job was cancelled', logging.WARNING)
             raise
