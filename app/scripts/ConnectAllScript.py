@@ -5,21 +5,17 @@ import time
 
 import asyncpg
 import asyncpg.exceptions
+from Selenium import str_xpath
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from Log import ErrorLog
-from Sql import (
-    AlreadyConnectedLinks,
-    ArchitectLink,
-    BrokenLinks,
-    CachedLink,
-    CEOLink,
-    LinkList,
-    RandomLink,
-)
+from Journal import ErrorLog
+from Puzzles import *
+from Puzzles import Cached, Wait
+from Puzzles.If import Apply
+from Sql import *
 
 
 class ConnectAllScript:
@@ -51,50 +47,28 @@ class ConnectAllScript:
             int(os.environ["ENV_MAX_ALLOWED_CONNECTION_REQUESTS"]),
             self.log,
         )
-        try:
-            await self.log.write("Extracting leads", logging.INFO)
 
-            inputs = await connection.fetch(
-                """
-                WITH select_architect AS (
-                SELECT pp.profile_url, pp.full_name
-                FROM architect_linkedin_profiles pp
-                LEFT JOIN already_connected_profiles acp
-                    ON pp.profile_url = acp.profile_url
-                LEFT JOIN broken_linkedin_profiles bp
-                    ON pp.profile_url = bp.profile_url
-                LEFT JOIN broken_links bl
-                    ON pp.profile_url = bl.sales_navigator_profile_url
-                WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
-                ORDER BY random()
-                LIMIT $1
-            ),
-
-            select_ceo AS (
-                SELECT pp.profile_url, pp.full_name
-                FROM connected_profiles pp
-                LEFT JOIN already_connected_profiles acp
-                    ON pp.profile_url = acp.profile_url
-                LEFT JOIN broken_linkedin_profiles bp
-                    ON pp.profile_url = bp.profile_url
-                LEFT JOIN broken_links bl
-                    ON pp.profile_url = bl.sales_navigator_profile_url
-                WHERE acp.profile_url IS NULL AND bp.profile_url IS NULL AND bl.sales_navigator_profile_url IS NULL
-                ORDER BY random()
-                LIMIT (
-                    SELECT CASE 
-                        WHEN count(*) < $1 THEN 2 * $1 - count(*) 
-                        ELSE $1 
-                    END 
-                    FROM select_architect
+        for link in links:
+            url = await link.profile_url()
+            full_name = Cached(
+                str_xpath(
+                    url,
+                    self.driver,
+                    self.log,
+                    './/h1[@class="text-heading-xlarge inline t-24 v-align-middle break-words"]',
                 )
             )
-
-            SELECT * FROM select_ceo
-            UNION
-            SELECT * FROM select_architect;""",
-                500,
+            wait = (
+                Wait('.//button[@aria-label="More actions"]', self.driver, self.log),
             )
+            main = str_xpath(
+                '//main//*[contains(@aria-label, "Invite") and contains(@aria-label, "to connect")]',
+                self.driver,
+                self.log,
+            )
+
+        try:
+            await self.log.write("Extracting leads", logging.INFO)
 
             await self.log.write("Done", logging.INFO)
 
@@ -104,6 +78,7 @@ class ConnectAllScript:
                 os.environ["ENV_MAX_ALLOWED_CONNECTION_REQUESTS"]
             ) and index < len(inputs):
                 try:
+
                     row = inputs[index]
                     current_url = row["profile_url"]
 
