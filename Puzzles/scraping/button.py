@@ -1,14 +1,12 @@
-"""
-Defines anything that can be clicked.
-"""
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 
 from abc import ABC, abstractmethod
 
 
-# pylint: disable=too-few-public-methods
 class Button(ABC):
     """
-    Defines anything that can be clicked.
+    Defines anything that can be clicked or interacted with.
     """
 
     @abstractmethod

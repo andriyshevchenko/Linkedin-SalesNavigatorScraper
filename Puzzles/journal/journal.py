@@ -1,17 +1,14 @@
-"""
-Defines a notebook (log, logger, report etc.)
-"""
-
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 from abc import ABC, abstractmethod
 
-from puzzles.core import String
-from puzzles.journal import Level
+from puzzles.core.string import String
+from puzzles.journal.level import Level
 
 
-# pylint: disable=too-few-public-methods
 class Journal(ABC):
     """
-    Defines a notebook (log, logger, report etc.)
+    Defines a journal (log, logger, notebook etc.)
     """
 
     @abstractmethod
@@ -20,6 +17,6 @@ class Journal(ABC):
         Writes a message to the journal.
 
         :param message: The message to write.
-        :param level: The level of the message.
+        :param level: Severity level.
         :return: None
         """

@@ -1,26 +1,24 @@
-"""
-Greater than.
-"""
-
-from core import Boolean, Integer
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
-class Gt(Boolean):
+from puzzles.core.boolean import Boolean
+from puzzles.core.integer import Integer
+
+
+class BoolGt(Boolean):
     """
     Greater than.
     """
 
     def __init__(self, a: Integer, b: Integer):
         """
-        Initializes a Gt instance.
+        Initializes a `BoolGt` instance.
 
-        :param target: The left operand.
-        :param func: The right operand.
+        :param target: A left operand.
+        :param func: A right operand.
         """
         self.a = a
         self.b = b
 
-    async def which(self) -> bool:
+    def which(self) -> bool:
 
-        return await self.a.which() > await self.b.which()
+        return self.a.which() > self.b.which()

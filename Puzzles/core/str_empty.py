@@ -1,15 +1,12 @@
-"""
-Defines an empty string.
-"""
-
-from core import String
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
+from puzzles.core.string import String
+
+
 class StrEmpty(String):
     """
-    Defines an empty string.
+    An empty string.
     """
 
-    async def which(self) -> str:
+    def which(self) -> str:
         return ""

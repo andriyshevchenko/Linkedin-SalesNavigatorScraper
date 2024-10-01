@@ -5,48 +5,36 @@ import platform
 
 from telegram import Bot
 
-from Env import *
-from Journal import *
-from Scripts import *
+from app.env import EnvLinux, EnvWindows
+from app.journal import JrnTelegram
+from app.scripts import ScrLogin
+from puzzles.core import StrLiteral
+from puzzles.journal import JrnByLevel, LvlDefault
 
 
 async def main():
-    telegram = LogByLevel(
-        TelegramLog(
+
+    log = JrnByLevel(
+        JrnTelegram(
             Bot(token=os.environ["ENV_TELEGRAM_BOT_TOKEN"]),
-            os.environ["ENV_TELEGRAM_CHAT_ID"],
-            os.environ["ENV_FUNCTION_NAME"],
+            StrLiteral(os.environ["ENV_TELEGRAM_CHAT_ID"]),
         ),
-        logging.DEBUG,
+        LvlDefault(logging.DEBUG),
     )
-    async with ScopedLog(telegram) as log:
-        await log.write("Successfully started function", logging.DEBUG)
-        if platform.system() == "Windows":
-            driver = await WindowsEnv(log).run()
-        else:
-            if "ENV_DOCKER" in os.environ:
-                await log.write("Running from Docker", logging.INFO)
-            driver = await LinuxEnv(log).run()
 
-        await log.write("Driver installed", logging.DEBUG)
+    await log.write(
+        StrLiteral("Successfully started function"), LvlDefault(logging.DEBUG)
+    )
 
-        await FinalScript(
-            AllOf(
-                log,
-                LoginScript(driver, log),
-                SwitchCaseScript(
-                    {
-                        "disconnect-leads": DisconnectScript(driver, log),
-                        "connect-leads": ConnectAllScript(driver, log),
-                    },
-                    os.environ["ENV_FUNCTION_NAME"],
-                    log,
-                ),
-            ),
-            driver,
-            log,
-        ).perform()
-        await log.write("Function quit", logging.DEBUG)
+    if platform.system() == "Windows":
+        driver = await EnvWindows(log).run()
+    else:
+        driver = await EnvLinux(log).run()
+
+    await log.write(StrLiteral("Driver installed"), LvlDefault(logging.DEBUG))
+    await ScrLogin(driver, log).run()
+    await driver.close()
+    await log.write(StrLiteral("Function quit"), LvlDefault(logging.DEBUG))
 
 
 if __name__ == "__main__":

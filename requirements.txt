@@ -1,6 +1,5 @@
-selenium==4.11.2
-webdriver-manager==4.0.0
-python-telegram-bot==20.5
-psycopg2==2.9.9
-asyncpg==0.29.0
-better_exceptions==0.3.3
+playwright
+python-telegram-bot
+psycopg2
+asyncpg
+better_exceptions

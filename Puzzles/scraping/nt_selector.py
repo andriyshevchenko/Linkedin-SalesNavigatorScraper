@@ -7,6 +7,7 @@ from selenium.webdriver.remote.webelement import WebElement
 
 from puzzles.core import String
 from puzzles.scraping import Native
+from puzzles.scraping.str_descriptor import StrDescriptor
 
 
 # pylint: disable=too-few-public-methods
@@ -26,8 +27,12 @@ class NtSelector(Native):
         self.driver = driver
         self.locator = locator
         self.selector = selector
+        self.name = StrDescriptor(selector, locator)
 
     async def element(self) -> WebElement:
         selector = await self.selector.which()
         locator = await self.locator.which()
         return self.driver.find_element(locator, selector)
+
+    async def which(self) -> String:
+        return self.which

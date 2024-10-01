@@ -1,17 +1,14 @@
-"""
-Current UTC datetime.
-"""
-
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 from datetime import datetime, timezone
 
-from core import DateTime
+from puzzles.core.datetime import DateTime
 
 
-# pylint: disable=too-few-public-methods
 class DtUtcnow(DateTime):
     """
     Current UTC datetime.
     """
 
-    async def which(self) -> datetime:
+    def which(self) -> datetime:
         return datetime.now(timezone.utc)

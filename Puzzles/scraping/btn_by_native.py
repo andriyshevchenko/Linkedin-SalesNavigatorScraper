@@ -1,14 +1,12 @@
-"""
-Wrapper around selenium DOM element.
-"""
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 
 from selenium.webdriver.common.action_chains import ActionChains
 
 from puzzles.scraping import Button, Native
 
 
-# pylint: disable=too-few-public-methods
-class BtnNative(Button):
+class BtnByNative(Button):
     """
     Wrapper around selenium DOM element.
     """

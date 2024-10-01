@@ -1,11 +1,9 @@
-"""
-Datetime as string.
-"""
-
-from core import DateTime, String
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
+from puzzles.core.datetime import DateTime
+from puzzles.core.string import String
+
+
 class StrDatetime(String):
     """
     Datetime as string.
@@ -13,7 +11,7 @@ class StrDatetime(String):
 
     def __init__(self, target: DateTime, fmt: String):
         """
-        Initializes a StrDatetime instance.
+        Initializes a `StrDatetime` instance.
 
         :param target: The datetime to format.
         :param fmt: The format string.
@@ -21,6 +19,6 @@ class StrDatetime(String):
         self.target = target
         self.fmt = fmt
 
-    async def which(self) -> str:
-        datetime = await self.target.which()
-        return datetime.strftime(await self.fmt.which())
+    def which(self) -> str:
+        datetime = self.target.which()
+        return datetime.strftime(self.fmt.which())

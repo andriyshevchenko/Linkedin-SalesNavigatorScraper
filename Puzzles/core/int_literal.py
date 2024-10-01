@@ -1,11 +1,8 @@
-"""
-Integer literal.
-"""
-
-from core import Integer
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
+from puzzles.core.integer import Integer
+
+
 class IntLiteral(Integer):
     """
     Integer literal.
@@ -15,9 +12,9 @@ class IntLiteral(Integer):
         """
         Initialises an IntLiteral instance.
 
-        :param value: The int value of the instance.
+        :param value: Int value of the instance.
         """
         self.value = value
 
-    async def which(self) -> int:
+    def which(self) -> int:
         return self.value

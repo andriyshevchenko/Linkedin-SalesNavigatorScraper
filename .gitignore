@@ -44,4 +44,6 @@ msbuild.log
 msbuild.err
 msbuild.wrn
 myenv/
-venv/   
+venv/ 
+
+node_modules/

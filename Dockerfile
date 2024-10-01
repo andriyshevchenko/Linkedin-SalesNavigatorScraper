@@ -1,13 +1,35 @@
-# Use an official Python runtime as a parent image
+# First stage: build
+FROM python:3.11-slim AS builder
+
+# Install necessary build tools and libraries
+RUN apt-get update && apt-get install -y \
+    libgbm-dev \
+    libpq-dev \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright and its dependencies
+RUN pip install playwright \
+    && playwright install chromium --with-deps
+
+# Second stage: runtime
 FROM python:3.11-slim
 
+# Install necessary runtime packages, including Privoxy
 RUN apt-get update && apt-get install -y \
-    wget \
     curl \
-    unzip \
+    lsof \
     privoxy \
-    proxychains \
-    libx11-dev \
     libx11-xcb1 \
     libxcb1 \
     libxcomposite1 \
@@ -19,60 +41,33 @@ RUN apt-get update && apt-get install -y \
     libgdk-pixbuf2.0-0 \
     libatspi2.0-0 \
     libgtk-3-0 \
+    libasound2 \
     xdg-utils \
-    libgbm-dev \
-    libpangocairo-1.0-0 \
-    libpq-dev \
-    build-essential \
-    python3-dev \
     ca-certificates \
-    ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
 
-# Set environment variables for SOCKS5 proxy
-ENV ENV_SOCKS5_PROXY_IP=""
-ENV ENV_SOCKS5_PROXY_PORT=""
-ENV ENV_SOCKS5_PROXY_USERNAME=""
-ENV ENV_SOCKS5_PROXY_PASSWORD=""
-ENV ENV_HTTP_PROXY_PORT=8118
+# Copy Python dependencies from the builder stage
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
-ENV ENV_DOCKER=1
+# Copy the Playwright browsers installed in the builder stage
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
-# Copy the requirements file into the container
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright and its dependencies
-RUN playwright install chromium --with-deps
-
-# Copy the rest of your application code into the container
+# Copy application code into the container
 COPY . .
 
-# Configure Proxychains to use SOCKS5 with authentication
-RUN echo "strict_chain\n\
-proxy_dns\n\
-[ProxyList]\n\
-socks5 $ENV_SOCKS5_PROXY_IP $ENV_SOCKS5_PROXY_PORT $ENV_SOCKS5_PROXY_USERNAME $ENV_SOCKS5_PROXY_PASSWORD" > /etc/proxychains.conf
+ENV ENV_DOCKER=1
+ENV ENV_HTTP_PROXY_IP='127.0.0.1'
 
-# Configure Privoxy to route only specific websites through the SOCKS5 proxy
-RUN echo "listen-address 0.0.0.0:$ENV_HTTP_PROXY_PORT\n\
-permit-access 0.0.0.0/0\n\
-logfile /var/log/privoxy/logfile\n\
-filter 0  # Disable filtering\n\
-# Forward requests to linkedin.com and its subdomains through the SOCKS5 proxy\n\
-forward-socks5t /api.ipify.org/ 127.0.0.1:9050 .\n\
-forward-socks5t /linkedin.com/ 127.0.0.1:9050 .\n\
-forward-socks5t /www.linkedin.com/ 127.0.0.1:9050 .\n" > /etc/privoxy/config
+# Inline Privoxy configuration with SOCKS5 authentication
+RUN echo "forward-socks5 / {ENV_SOCKS5_PROXY_USERNAME}:{ENV_SOCKS5_PROXY_PASSWORD}@{ENV_SOCKS5_PROXY_IP}:{ENV_SOCKS5_PROXY_PORT} ." >> /etc/privoxy/config && \
+    echo "listen-address  $ENV_HTTP_PROXY_IP:{ENV_HTTP_PROXY_PORT}" >> /etc/privoxy/config
 
-# Expose Privoxy port
-EXPOSE 8118
+# Make the script executable
+RUN chmod +x /app/start-services.sh
 
-# Start Privoxy in the background and then run the Python app
-CMD privoxy /etc/privoxy/config & \
-    proxychains python main.py
+# Use the shell script to start services and run the Python application
+CMD ["/app/start-services.sh"]

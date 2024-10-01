@@ -1,7 +1,4 @@
-"""
-Defines a log level.
-"""
-
+# pylint: disable=missing-module-docstring
 from abc import ABC, abstractmethod
 
 
@@ -15,7 +12,7 @@ class Level(ABC):
         """
         Return a string representation of value.
 
-        :return: string representation of value.
+        :return: String representation of value.
 
         """
 
@@ -24,6 +21,6 @@ class Level(ABC):
         """
         Return a boolean value.
 
-        :return: None a boolean value of the object.
+        :return: True if current level contains a level provided in an argument
 
         """

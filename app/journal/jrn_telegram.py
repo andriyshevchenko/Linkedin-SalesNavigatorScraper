@@ -19,7 +19,4 @@ class JrnTelegram(Journal):
         self.chat_id = chat_id
 
     async def write(self, message: String, level: Level):
-        await self.bot.send_message(
-            await self.chat_id.which(),
-            await message.which()
-        )
+        await self.bot.send_message(self.chat_id.which(), message.which())

@@ -1,11 +1,9 @@
-"""
-Parses an `Integer` from `String`.
-"""
-
-from core import Integer, String
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
+from puzzles.core.integer import Integer
+from puzzles.core.string import String
+
+
 class IntParsed(Integer):
     """
     Parses an `Integer` from `String`.
@@ -15,9 +13,9 @@ class IntParsed(Integer):
         """
         Initializes an IntParsed instance.
 
-        :param value: The String to parse.
+        :param value: A `String` to parse.
         """
         self.value = value
 
-    async def which(self) -> int:
-        return int(await self.which())
+    def which(self) -> int:
+        return int(self.which())

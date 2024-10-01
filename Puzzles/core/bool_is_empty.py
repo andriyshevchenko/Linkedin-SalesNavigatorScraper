@@ -1,23 +1,21 @@
-"""
-Is string empty.
-"""
-
-from core import Boolean, String
-
-
+# pylint: disable=missing-module-docstring
 # pylint: disable=too-few-public-methods
-class IsEmpty(Boolean):
+from puzzles.core.boolean import Boolean
+from puzzles.core.string import String
+
+
+class BoolStrEmpty(Boolean):
     """
     Is string empty.
     """
 
     def __init__(self, target: String):
         """
-        Initialises an IsEmpty instance.
+        Initialises a `BoolStrEmpty` instance.
 
-        :param target: The target string to check.
+        :param target: Target string to check.
         """
         self.target = target
 
-    async def which(self) -> bool:
-        return await self.target.which() == ""
+    def which(self) -> bool:
+        return self.target.which() == ""

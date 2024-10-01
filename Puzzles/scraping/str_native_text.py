@@ -7,7 +7,7 @@ from puzzles.scraping import Native
 
 
 # pylint: disable=too-few-public-methods
-class StrByNative(String):
+class StrNativeText(String):
     """
     Reads text from a DOM element.
     """

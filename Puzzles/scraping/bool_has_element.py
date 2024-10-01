@@ -15,9 +15,9 @@ class BoolHasElement(Boolean):
         """
         Initialises a BoolHasElement instance.
 
-        :param selector: The selector string.
-        :param locator: The By-like object.
-        :param driver: The Selenium WebDriver instance.
+        :param selector: Selector string.
+        :param locator: By-like object (XPATH, CSS, etc).
+        :param driver: Selenium WebDriver instance.
         """
         self.selector = selector
         self.locator = locator

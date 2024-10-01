@@ -7,8 +7,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from puzzles.scraping import Native
 
 
-# pylint: disable=too-few-public-methods
-class NtLiteral(Native):
+class NtRef(Native):
     """
     Represents a native selenium element.
     """

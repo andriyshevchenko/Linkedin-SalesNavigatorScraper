@@ -1,22 +1,28 @@
-"""
-Represents a native selenium element.
-"""
+# pylint: disable=missing-module-docstring
 
 from abc import ABC, abstractmethod
 
-from selenium.webdriver.remote.webelement import WebElement
+from puzzles.core import String
 
 
 # pylint: disable=too-few-public-methods
 class Native(ABC):
     """
-    Represents a native selenium element.
+    Represents a native web driver element (Selenium, Playwright, etc.).
     """
 
     @abstractmethod
-    async def element(self) -> WebElement:
+    async def element(self):
         """
-        Returns the underlying selenium element.
+        Returns an underlying web driver element.
 
-        :return: None
+        :return: Native web driver element.
+        """
+
+    @abstractmethod
+    async def which(self) -> String:
+        """
+        Provides a description of the element.
+
+        :return: A string description identifying the element.
         """

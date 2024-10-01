@@ -16,9 +16,9 @@ class AitSelector:
         """
         Initialises an AitSelector instance.
 
-        :param selector: The selector string.
-        :param locator: The By-like object.
-        :param driver: The Selenium WebDriver instance.
+        :param selector: Selector string.
+        :param locator: By-like object.
+        :param driver: Selenium WebDriver instance.
         """
         self.selector = selector
         self.locator = locator

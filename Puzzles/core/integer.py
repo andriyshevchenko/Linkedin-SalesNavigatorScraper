@@ -1,21 +1,18 @@
-"""
-Anything that can evalute to `int`.
-"""
-
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 from abc import ABC, abstractmethod
 
 
-# pylint: disable=too-few-public-methods
 class Integer(ABC):
     """
     Anything that can evalute to `int`.
     """
 
     @abstractmethod
-    async def which(self) -> int:
+    def which(self) -> int:
         """
-        Return an `int` value.
+        Returns an `int` value.
 
-        :return: an `int` value of the object.
+        :return:`int` value of the object.
 
         """

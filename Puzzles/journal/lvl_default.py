@@ -1,20 +1,17 @@
-"""
-Defines a default python logging levels.
-"""
-
+# pylint: disable=missing-module-docstring
 import logging
 
-from puzzles.journal import Level
+from puzzles.journal.level import Level
 
 
-class LvlPython(Level):
+class LvlDefault(Level):
     """
     Defines a default python logging levels.
     """
 
     def __init__(self, value: int):
         """
-        Initialises an LvlPython instance.
+        Initialises a `LvlDefault` instance.
 
         :param value: The int value.
         """

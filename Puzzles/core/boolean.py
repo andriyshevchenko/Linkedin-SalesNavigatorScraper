@@ -1,20 +1,17 @@
-"""
-Anything that evaluates as True or False.
-"""
-
+# pylint: disable=missing-module-docstring
+# pylint: disable=too-few-public-methods
 from abc import ABC, abstractmethod
 
 
-# pylint: disable=too-few-public-methods
 class Boolean(ABC):
     """
     Anything that evaluates as True or False.
     """
 
     @abstractmethod
-    async def which(self) -> bool:
+    def which(self) -> bool:
         """
-        Return the boolean value
+        Return a boolean value
 
-        :return: the boolean value of the object.
+        :return: a boolean value of the object.
         """
