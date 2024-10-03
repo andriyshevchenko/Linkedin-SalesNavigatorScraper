@@ -1,5 +1,4 @@
 playwright
 python-telegram-bot
-psycopg2
 asyncpg
 better_exceptions

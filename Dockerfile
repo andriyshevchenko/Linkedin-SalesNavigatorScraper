@@ -57,7 +57,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Copy application code into the container
-COPY . .
+COPY . /app
 
 ENV ENV_DOCKER=1
 ENV ENV_HTTP_PROXY_IP='127.0.0.1'
